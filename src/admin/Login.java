@@ -400,7 +400,9 @@ public class Login extends javax.swing.JFrame {
                     
                     if(passMatched) {
                         this.setVisible(false);
-                        
+                        Dashboard dbd = new Dashboard();
+                        dbd.userSession(username.getText());
+                        dbd.setVisible(true);
                     } else {
                         alertCheck.setText("Username atau password salah");
                         alertCheck.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255,153,51), 10));

@@ -12,6 +12,8 @@ import java.awt.HeadlessException;
 import java.awt.Image;
 import java.awt.event.ItemEvent;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.net.URL;
@@ -26,6 +28,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -34,6 +38,7 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
@@ -43,10 +48,14 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.Row;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.general.DefaultPieDataset;
 import org.jfree.data.general.PieDataset;
@@ -61,9 +70,10 @@ public class Dashboard extends javax.swing.JFrame {
     Statement stat;
     PreparedStatement ps;
     ResultSet rs;
-    String sql, dataClicked, editFormMode, imageChoose, filePath;
+    String sql, dataClicked, editFormMode, imageChoose, filePath, userLogin;
     List<String> listId = new ArrayList<>();
     JTable tb = new JTable();
+    String tgl = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     
     /**
      * Creates new form Dashboard
@@ -72,6 +82,7 @@ public class Dashboard extends javax.swing.JFrame {
         initComponents();
         this.setIconImage(new ImageIcon(getClass().getResource("../assets/jordan.png")).getImage());
         this.setTitle("Dashboard");
+        welcomeName.setText(userLogin);
         dashboardBtn.setBackground(new java.awt.Color(0,51,204));
         dashboardBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0,51,204), 15));
         contentScroll.getVerticalScrollBar().setUnitIncrement(16);
@@ -93,8 +104,13 @@ public class Dashboard extends javax.swing.JFrame {
         showFilterTahun();
     }
     
+    public void userSession(String username) {
+        userLogin = username;
+    }
+    
     private void showDataAdmin() {
         this.setTitle("Data Admin");
+        exportExcel.setVisible(false);
         searchField.setVisible(true);
         searchBtn.setVisible(true);
         insertBtn.setVisible(true);
@@ -102,6 +118,7 @@ public class Dashboard extends javax.swing.JFrame {
         deleteBtn.setText("DELETE ALL");
         listId.clear();
         showAll.setVisible(false);
+        exportExcel.setVisible(false);
         
         JPanel tableBox = new JPanel();
         tableBox.setBackground(Color.white);
@@ -117,8 +134,9 @@ public class Dashboard extends javax.swing.JFrame {
         table.addColumn("Id");
         table.addColumn("Username");
         try {
-            sql = "SELECT * FROM admin";
+            sql = "SELECT * FROM admin WHERE username != ?";
             ps = con.prepareStatement(sql);
+            ps.setString(1, userLogin);
             rs = ps.executeQuery();
             while(rs.next()) {
                 table.addRow(new Object[] {
@@ -221,6 +239,7 @@ public class Dashboard extends javax.swing.JFrame {
         deleteBtn.setText("DELETE ALL");
         listId.clear();
         showAll.setVisible(false);
+        exportExcel.setVisible(true);
         
         JPanel tableBox = new JPanel();
         tableBox.setBackground(Color.white);
@@ -335,6 +354,7 @@ public class Dashboard extends javax.swing.JFrame {
         insertBtn.setVisible(false);
         editBtn.setVisible(false);
         showAll.setVisible(false);
+        exportExcel.setVisible(false);
         
         JPanel tableBox = new JPanel();
         tableBox.setBackground(Color.white);
@@ -471,43 +491,55 @@ public class Dashboard extends javax.swing.JFrame {
          
         lineChart.setBackgroundPaint(new Color(255,255,255));
         ChartPanel chartPanel = new ChartPanel(lineChart);
-        chartPanel.setPreferredSize(new Dimension(560 , 367));
+        chartPanel.setPreferredSize(new Dimension(500, 367));
         contentPanel.add(chartPanel);
     }
     
-    private void tableBarangDiproses() {
-        JPanel tableBox = new JPanel();
-        tableBox.setBackground(Color.white);
-        tableBox.setLayout(new GridLayout(1, 0));
-        tb = new JTable();
-        DefaultTableModel table = new DefaultTableModel() {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        table.addColumn("Id Order");
-        table.addColumn("Produk");
-        table.addColumn("Tanggal Order");
-        table.addColumn("Tanggal Estimasi");
+    private DefaultCategoryDataset createTotalPenjualan() {
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+        Calendar years = Calendar.getInstance();
+        years.add(Calendar.YEAR, -1);
+        int prevYear1 = years.get(Calendar.YEAR);
+        years.add(Calendar.YEAR, -1);
+        int prevYear2 = years.get(Calendar.YEAR);
         try {
-            sql = "SELECT mo.id_order, p.name, mo.order_date, mo.estimated_date FROM myorder mo JOIN products p ON p.id_product = mo.id_product WHERE status = ?";
+            sql = "SELECT DISTINCT "
+                    + "(SELECT COALESCE(SUM(mo.price), 0) FROM myorder mo JOIN products p ON p.id_product = mo.id_product WHERE YEAR(mo.order_date) = ?) AS f, "
+                    + "(SELECT COALESCE(SUM(mo.price), 0) FROM myorder mo JOIN products p ON p.id_product = mo.id_product WHERE YEAR(mo.order_date) = ?) AS s, "
+                    + "(SELECT COALESCE(SUM(mo.price), 0) FROM myorder mo JOIN products p ON p.id_product = mo.id_product WHERE YEAR(mo.order_date) = ?) AS t "
+                    + "FROM myorder";
             ps = con.prepareStatement(sql);
-            ps.setString(1, "Sedang diproses");
+            ps.setString(1, String.valueOf(prevYear2));
+            ps.setString(2, String.valueOf(prevYear1));
+            ps.setString(3, String.valueOf(currentYear));
             rs = ps.executeQuery();
             while(rs.next()) {
-                table.addRow(new Object[] {
-                    rs.getString(1), rs.getString(2),
-                    rs.getString(3), rs.getString(4)
-                });
+                dataset.addValue(Integer.parseInt(rs.getString("f")), "Total", String.valueOf(prevYear2));
+                dataset.addValue(Integer.parseInt(rs.getString("s")), "Total", String.valueOf(prevYear1));
+                dataset.addValue(Integer.parseInt(rs.getString("t")), "Total", String.valueOf(currentYear));
             }
-            tb.setModel(table);
         } catch(SQLException e) {
             JOptionPane.showMessageDialog(null, e);
         }
-        JScrollPane scrollPane = new JScrollPane(tb);
-        tableBox.add(scrollPane);
-        contentPanel.add(tableBox);
+        
+        return dataset;
+    }
+    
+    private void totalPenjualanChart() {
+        JFreeChart lineChart = ChartFactory.createLineChart(
+            "Total Penjualan Produk",
+            "Tahun", "Pendapatan",
+            createTotalPenjualan(),
+            PlotOrientation.VERTICAL,
+            true, true, false
+        );
+         
+        lineChart.setBackgroundPaint(new Color(255,255,255));
+        ChartPanel chartPanel = new ChartPanel(lineChart);
+        chartPanel.setPreferredSize(new Dimension(500, 367));
+        contentPanel.add(chartPanel);
     }
     
     private void headerInformation() {
@@ -536,7 +568,7 @@ public class Dashboard extends javax.swing.JFrame {
         return new ChartPanel(chart) {
             @Override
             public Dimension getPreferredSize() {
-                return new Dimension(560 , 367);
+                return new Dimension(500, 367);
             }
         };
    }
@@ -618,6 +650,7 @@ public class Dashboard extends javax.swing.JFrame {
         apparelBtn = new javax.swing.JLabel();
         modelBtn = new javax.swing.JLabel();
         logoutBtn = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
         statusPanel = new javax.swing.JPanel();
         jPanel2 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
@@ -642,6 +675,7 @@ public class Dashboard extends javax.swing.JFrame {
         insertBtn = new javax.swing.JButton();
         deleteBtn = new javax.swing.JButton();
         showAll = new javax.swing.JButton();
+        exportExcel = new javax.swing.JButton();
         editForm = new javax.swing.JPanel();
         titleForm = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
@@ -690,7 +724,7 @@ public class Dashboard extends javax.swing.JFrame {
 
         welcomeName.setFont(new java.awt.Font("Google Sans", 0, 18)); // NOI18N
         welcomeName.setForeground(new java.awt.Color(255, 255, 255));
-        welcomeName.setText("adminganteng");
+        welcomeName.setText("username");
 
         jLabel10.setIcon(new javax.swing.ImageIcon("D:\\Project\\Java\\GUI\\NikeShop\\src\\assets\\jordan-45-white.png")); // NOI18N
 
@@ -844,19 +878,27 @@ public class Dashboard extends javax.swing.JFrame {
         });
         jPanel3.add(logoutBtn);
 
+        jLabel3.setForeground(new java.awt.Color(0, 102, 255));
+        jLabel3.setText("Made by RiNov with ❤️");
+
         javax.swing.GroupLayout sidebarLayout = new javax.swing.GroupLayout(sidebar);
         sidebar.setLayout(sidebarLayout);
         sidebarLayout.setHorizontalGroup(
             sidebarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(sidebarLayout.createSequentialGroup()
-                .addGap(21, 21, 21)
-                .addComponent(jLabel10)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(sidebarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(welcomeName)
-                    .addComponent(jLabel1))
-                .addContainerGap(71, Short.MAX_VALUE))
             .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addGroup(sidebarLayout.createSequentialGroup()
+                .addGroup(sidebarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(sidebarLayout.createSequentialGroup()
+                        .addGap(21, 21, 21)
+                        .addComponent(jLabel10)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addGroup(sidebarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(welcomeName)
+                            .addComponent(jLabel1)))
+                    .addGroup(sidebarLayout.createSequentialGroup()
+                        .addGap(14, 14, 14)
+                        .addComponent(jLabel3)))
+                .addContainerGap(71, Short.MAX_VALUE))
         );
         sidebarLayout.setVerticalGroup(
             sidebarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -870,7 +912,9 @@ public class Dashboard extends javax.swing.JFrame {
                     .addComponent(jLabel10))
                 .addGap(35, 35, 35)
                 .addComponent(jPanel3, javax.swing.GroupLayout.PREFERRED_SIZE, 339, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(jLabel3)
+                .addGap(14, 14, 14))
         );
 
         statusPanel.setBackground(new java.awt.Color(255, 255, 255));
@@ -1124,6 +1168,20 @@ public class Dashboard extends javax.swing.JFrame {
             }
         });
 
+        exportExcel.setBackground(new java.awt.Color(255, 255, 153));
+        exportExcel.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
+        exportExcel.setForeground(new java.awt.Color(153, 153, 0));
+        exportExcel.setText("EXPORT EXCEL");
+        exportExcel.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(153, 153, 0)));
+        exportExcel.setContentAreaFilled(false);
+        exportExcel.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        exportExcel.setOpaque(true);
+        exportExcel.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                exportExcelActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
@@ -1131,7 +1189,9 @@ public class Dashboard extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(14, 14, 14)
                 .addComponent(title)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 85, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 72, Short.MAX_VALUE)
+                .addComponent(exportExcel, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(showAll, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(deleteBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1157,12 +1217,13 @@ public class Dashboard extends javax.swing.JFrame {
                         .addComponent(title))
                     .addGroup(jPanel1Layout.createSequentialGroup()
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(showAll, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(searchField, javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(searchBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(editBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(insertBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(deleteBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(deleteBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(showAll, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(exportExcel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addGap(2, 2, 2)))
                 .addGap(3, 3, 3))
         );
@@ -1642,13 +1703,73 @@ public class Dashboard extends javax.swing.JFrame {
             contentPanel.revalidate();
             contentPanel.repaint();
             String x = (String) evt.getItem();
+            exportExcel.setVisible(true);
             
             contentPanel.add(pieChart());
             lineChart(x);
-            tableBarangDiproses();
+            totalPenjualanChart();
+            totalPenjualanProduk();
         }
     }//GEN-LAST:event_filterTahunItemStateChanged
 
+    private void totalPenjualanProduk() {
+        CategoryDataset dataset = datasetTotalPenjualanProduk();
+        JFreeChart chart = ChartFactory.createBarChart(
+            "Total Jumlah Produk Terjual",
+            "Tahun",
+            "Jumlah produk",
+            dataset,
+            PlotOrientation.VERTICAL,  
+            true, true, false
+        );
+
+        chart.setBackgroundPaint(new Color(255,255,255));
+        ChartPanel chartPanel = new ChartPanel(chart);
+        chartPanel.setPreferredSize(new Dimension(500, 367));
+        contentPanel.add(chartPanel);
+    }
+    
+     private CategoryDataset datasetTotalPenjualanProduk() {  
+        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+        
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+        Calendar years = Calendar.getInstance();
+        years.add(Calendar.YEAR, -1);
+        int prevYear1 = years.get(Calendar.YEAR);
+        years.add(Calendar.YEAR, -1);
+        int prevYear2 = years.get(Calendar.YEAR);
+        try {
+            sql = "SELECT DISTINCT" +
+                    " (SELECT COUNT(COALESCE(p.apparel, 0)) FROM myorder mo JOIN products p ON p.id_product = mo.id_product WHERE p.apparel = 'Nike' AND YEAR(mo.order_date) = ?) AS firstNike," +
+                    " (SELECT COUNT(COALESCE(p.apparel, 0)) FROM myorder mo JOIN products p ON p.id_product = mo.id_product WHERE p.apparel = 'Jordan' AND YEAR(mo.order_date) = ?) AS firstJordan," +
+                    " (SELECT COUNT(COALESCE(p.apparel, 0)) FROM myorder mo JOIN products p ON p.id_product = mo.id_product WHERE p.apparel = 'Nike' AND YEAR(mo.order_date) = ?) AS secondNike," +
+                    " (SELECT COUNT(COALESCE(p.apparel, 0)) FROM myorder mo JOIN products p ON p.id_product = mo.id_product WHERE p.apparel = 'Jordan' AND YEAR(mo.order_date) = ?) AS secondJordan," +
+                    " (SELECT COUNT(COALESCE(p.apparel, 0)) FROM myorder mo JOIN products p ON p.id_product = mo.id_product WHERE p.apparel = 'Nike' AND YEAR(mo.order_date) = ?) AS thirdNike," +
+                    " (SELECT COUNT(COALESCE(p.apparel, 0)) FROM myorder mo JOIN products p ON p.id_product = mo.id_product WHERE p.apparel = 'Jordan' AND YEAR(mo.order_date) = ?) AS thirdJordan" +
+                    " FROM myorder";
+            ps = con.prepareStatement(sql);
+            ps.setString(1, String.valueOf(prevYear2));
+            ps.setString(2, String.valueOf(prevYear2));
+            ps.setString(3, String.valueOf(prevYear1));
+            ps.setString(4, String.valueOf(prevYear1));
+            ps.setString(5, String.valueOf(currentYear));
+            ps.setString(6, String.valueOf(currentYear));
+            rs = ps.executeQuery();
+            while(rs.next()) {
+                dataset.addValue(Integer.parseInt(rs.getString("firstNike")), "Nike", String.valueOf(prevYear2));
+                dataset.addValue(Integer.parseInt(rs.getString("firstJordan")), "Jordan", String.valueOf(prevYear2));
+                dataset.addValue(Integer.parseInt(rs.getString("secondNike")), "Nike", String.valueOf(prevYear1));
+                dataset.addValue(Integer.parseInt(rs.getString("secondJordan")), "Jordan", String.valueOf(prevYear1));
+                dataset.addValue(Integer.parseInt(rs.getString("thirdNike")), "Nike", String.valueOf(currentYear));
+                dataset.addValue(Integer.parseInt(rs.getString("thirdJordan")), "Jordan", String.valueOf(currentYear));
+            }
+        } catch(SQLException e) {
+            JOptionPane.showMessageDialog(null, e);
+        }
+
+        return dataset;  
+      }
+    
     private void dashboardBtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_dashboardBtnMouseClicked
         if(pageSelected != 1) {
             title.setText("Dashboard");
@@ -1658,6 +1779,7 @@ public class Dashboard extends javax.swing.JFrame {
             dashboardBtn.setBackground(new java.awt.Color(0,51,204));
             dashboardBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0,51,204), 15));
             filterTahun.setVisible(true);
+            exportExcel.setVisible(true);
             
             contentPanel.removeAll();
             contentPanel.revalidate();
@@ -1675,7 +1797,8 @@ public class Dashboard extends javax.swing.JFrame {
             dataClicked = null;
             showAll.setVisible(false);
             lineChart((String) filterTahun.getSelectedItem());
-            tableBarangDiproses();
+            totalPenjualanChart();
+            totalPenjualanProduk();
         }
     }//GEN-LAST:event_dashboardBtnMouseClicked
 
@@ -2186,6 +2309,7 @@ public class Dashboard extends javax.swing.JFrame {
 
     private void imageBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_imageBtnActionPerformed
         JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setAcceptAllFileFilterUsed(false);
         fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("PNG Images", "png"));
         int returnVal = fileChooser.showOpenDialog((Component) evt.getSource());
         if (returnVal == JFileChooser.APPROVE_OPTION) {
@@ -2819,6 +2943,258 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_showAllActionPerformed
 
+    private void exportExcelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exportExcelActionPerformed
+        switch(pageSelected) {
+            case 1 -> {
+                exportPenghasilan((String) filterTahun.getSelectedItem());
+            }
+            case 3 -> {
+                exportProduct();
+            }
+            case 5 -> {
+                exportApparel();
+            }
+            case 6 -> {
+                exportModel();
+            }
+            default -> {
+            }
+        }
+    }//GEN-LAST:event_exportExcelActionPerformed
+
+    private void exportPenghasilan(String tahun) {
+        JFrame parentFrame = new JFrame();
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setSelectedFile(new File("D:/penghasilan-report-" + tgl + ".xls"));
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("XLS files", "xls");
+        fileChooser.setFileFilter(filter);
+        fileChooser.setAcceptAllFileFilterUsed(false);
+        fileChooser.setDialogTitle("Tentukan Lokasi File Excel Yang Akan Disimpan");
+        int userSelection = fileChooser.showSaveDialog(parentFrame);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            String file = fileToSave.toString();
+            if(!file.endsWith(".xls"))
+               file = file + ".xls";
+            
+            try {
+                FileOutputStream fileOut;
+                fileOut = new FileOutputStream(file);
+                HSSFWorkbook workbook = new HSSFWorkbook();
+                HSSFSheet worksheet = workbook.createSheet("Sheet 0");
+                Row row1 = worksheet.createRow((short) 0);
+                row1.createCell(0).setCellValue("No");
+                row1.createCell(1).setCellValue("Bulan");
+                row1.createCell(2).setCellValue("Tahun");
+                row1.createCell(3).setCellValue("Penghasilan");
+                
+                Row row2;
+                sql = "SELECT DISTINCT" +
+                    " ( SELECT COALESCE(SUM(price), 0) FROM myorder WHERE MONTH(order_date) = 1 AND YEAR(order_date) = ? ) AS Bulan " +
+                    "FROM myorder UNION ALL" +
+                    " SELECT DISTINCT" +
+                    " ( SELECT COALESCE(SUM(price), 0) FROM myorder WHERE MONTH(order_date) = 2 AND YEAR(order_date) = ? ) " +
+                    "FROM myorder UNION ALL" +
+                    " SELECT DISTINCT" +
+                    " ( SELECT COALESCE(SUM(price), 0) FROM myorder WHERE MONTH(order_date) = 3 AND YEAR(order_date) = ? ) " +
+                    "FROM myorder UNION ALL" +
+                    " SELECT DISTINCT" +
+                    " ( SELECT COALESCE(SUM(price), 0) FROM myorder WHERE MONTH(order_date) = 4 AND YEAR(order_date) = ? ) " +
+                    "FROM myorder UNION ALL" +
+                    " SELECT DISTINCT" +
+                    " ( SELECT COALESCE(SUM(price), 0) FROM myorder WHERE MONTH(order_date) = 5 AND YEAR(order_date) = ? ) " +
+                    "FROM myorder UNION ALL" +
+                    " SELECT DISTINCT" +
+                    " ( SELECT COALESCE(SUM(price), 0) FROM myorder WHERE MONTH(order_date) = 6 AND YEAR(order_date) = ? ) " +
+                    "FROM myorder UNION ALL" +
+                    " SELECT DISTINCT" +
+                    " ( SELECT COALESCE(SUM(price), 0) FROM myorder WHERE MONTH(order_date) = 7 AND YEAR(order_date) = ? ) " +
+                    "FROM myorder UNION ALL" +
+                    " SELECT DISTINCT" +
+                    " ( SELECT COALESCE(SUM(price), 0) FROM myorder WHERE MONTH(order_date) = 8 AND YEAR(order_date) = ? ) " +
+                    "FROM myorder UNION ALL" +
+                    " SELECT DISTINCT" +
+                    " ( SELECT COALESCE(SUM(price), 0) FROM myorder WHERE MONTH(order_date) = 9 AND YEAR(order_date) = ? ) " +
+                    "FROM myorder UNION ALL" +
+                    " SELECT DISTINCT " +
+                    " ( SELECT COALESCE(SUM(price), 0) FROM myorder WHERE MONTH(order_date) = 10 AND YEAR(order_date) = ? ) " +
+                    "FROM myorder UNION ALL" +
+                    " SELECT DISTINCT " +
+                    " ( SELECT COALESCE(SUM(price), 0) FROM myorder WHERE MONTH(order_date) = 11 AND YEAR(order_date) = ? ) " +
+                    "FROM myorder UNION ALL " +
+                    " SELECT DISTINCT " +
+                    " ( SELECT COALESCE(SUM(price), 0) FROM myorder WHERE MONTH(order_date) = 12 AND YEAR(order_date) = ? ) " +
+                    "FROM myorder";
+                ps = con.prepareStatement(sql);
+                for(int i = 1; i <= 12; i++) {
+                    ps.setString(i, tahun);
+                }
+                rs = ps.executeQuery();
+                int num = 1;
+                String[] bulan = {"Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"};
+                while(rs.next()) {
+                    int a = rs.getRow();
+                    row2 = worksheet.createRow((short) a);
+                    row2.createCell(0).setCellValue(num);
+                    row2.createCell(1).setCellValue(bulan[num - 1]);
+                    row2.createCell(2).setCellValue(tahun);
+                    row2.createCell(3).setCellValue(rs.getString(1));
+                    num++;
+                }
+                workbook.write(fileOut);
+                fileOut.flush();
+                fileOut.close();
+                rs.close();
+                ps.close();
+                JOptionPane.showMessageDialog(null, "Data Penghasilan berhasil di export");
+            } catch(FileNotFoundException | SQLException e) {
+                JOptionPane.showMessageDialog(null, e);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(null, e);
+            }
+        }
+    }
+    
+    private void exportProduct() {
+        JFrame parentFrame = new JFrame();
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setSelectedFile(new File("D:/products-report-" + tgl + ".xls"));
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("XLS files", "xls");
+        fileChooser.setFileFilter(filter);
+        fileChooser.setAcceptAllFileFilterUsed(false);
+        fileChooser.setDialogTitle("Tentukan Lokasi File Excel Yang Akan Disimpan");
+        int userSelection = fileChooser.showSaveDialog(parentFrame);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            String file = fileToSave.toString();
+            if(!file.endsWith(".xls"))
+               file = file + ".xls";
+            
+            try {
+                FileOutputStream fileOut;
+                fileOut = new FileOutputStream(file);
+                HSSFWorkbook workbook = new HSSFWorkbook();
+                HSSFSheet worksheet = workbook.createSheet("Sheet 0");
+                Row row1 = worksheet.createRow((short) 0);
+                row1.createCell(0).setCellValue("Id");
+                row1.createCell(1).setCellValue("Nama Produk");
+                Row row2;
+                sql = "SELECT * FROM products";
+                ps = con.prepareStatement(sql);
+                rs = ps.executeQuery();
+                while(rs.next()) {
+                    int a = rs.getRow();
+                    row2 = worksheet.createRow((short) a);
+                    row2.createCell(0).setCellValue(rs.getString(1));
+                }
+                workbook.write(fileOut);
+                fileOut.flush();
+                fileOut.close();
+                rs.close();
+                ps.close();
+                JOptionPane.showMessageDialog(null, "Data Produk berhasil di export");
+            } catch(FileNotFoundException | SQLException e) {
+                JOptionPane.showMessageDialog(null, e);
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(null, e);
+            }
+        }
+    }
+    
+    private void exportApparel() {
+        JFrame parentFrame = new JFrame();
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setSelectedFile(new File("D:/apparel-report-" + tgl + ".xls"));
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("XLS files", "xls");
+        fileChooser.setFileFilter(filter);
+        fileChooser.setAcceptAllFileFilterUsed(false);
+        fileChooser.setDialogTitle("Tentukan Lokasi File Excel Yang Akan Disimpan");
+        int userSelection = fileChooser.showSaveDialog(parentFrame);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            String file = fileToSave.toString();
+            if(!file.endsWith(".xls"))
+               file = file + ".xls";
+        
+            try {
+                FileOutputStream fileOut;
+                fileOut = new FileOutputStream(file);
+                HSSFWorkbook workbook = new HSSFWorkbook();
+                HSSFSheet worksheet = workbook.createSheet("Sheet 0");
+                Row row1 = worksheet.createRow((short) 0);
+                row1.createCell(0).setCellValue("Id");
+                row1.createCell(1).setCellValue("Nama Apparel");
+                row1.createCell(2).setCellValue("Jumlah Produk");
+                Row row2;
+                sql = "SELECT a.id_apparel AS id, a.name AS name, (SELECT COUNT(p.apparel) FROM products p WHERE p.apparel = a.name) AS jumlah FROM apparel a";
+                ps = con.prepareStatement(sql);
+                rs = ps.executeQuery();
+                while(rs.next()) {
+                    int a = rs.getRow();
+                    row2 = worksheet.createRow((short) a);
+                    row2.createCell(0).setCellValue(rs.getString(1));
+                    row2.createCell(1).setCellValue(rs.getString(2));
+                    row2.createCell(2).setCellValue(rs.getString(3));
+                }
+                workbook.write(fileOut);
+                fileOut.flush();
+                fileOut.close();
+                rs.close();
+                ps.close();
+                JOptionPane.showMessageDialog(null, "Data Apparel berhasil di export ke D:/");
+            } catch(IOException | SQLException e) {
+                JOptionPane.showMessageDialog(null, e);
+            }
+        }
+    }
+    
+    private void exportModel() {
+        JFrame parentFrame = new JFrame();
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setSelectedFile(new File("D:/model-report-" + tgl + ".xls"));
+        FileNameExtensionFilter filter = new FileNameExtensionFilter("XLS files", "xls");
+        fileChooser.setFileFilter(filter);
+        fileChooser.setAcceptAllFileFilterUsed(false);
+        fileChooser.setDialogTitle("Tentukan Lokasi File Excel Yang Akan Disimpan");
+        int userSelection = fileChooser.showSaveDialog(parentFrame);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {
+            File fileToSave = fileChooser.getSelectedFile();
+            String file = fileToSave.toString();
+            if(!file.endsWith(".xls"))
+               file = file + ".xls";
+        
+            try {
+                FileOutputStream fileOut;
+                fileOut = new FileOutputStream(file);
+                HSSFWorkbook workbook = new HSSFWorkbook();
+                HSSFSheet worksheet = workbook.createSheet("Sheet 0");
+                Row row1 = worksheet.createRow((short) 0);
+                row1.createCell(0).setCellValue("Id");
+                row1.createCell(1).setCellValue("Nama Model");
+                row1.createCell(2).setCellValue("Jumlah Produk");
+                Row row2;
+                sql = "SELECT m.id_model AS id, m.name AS name, (SELECT COUNT(p.model) FROM products p WHERE p.model = m.name) AS jumlah FROM model m";
+                ps = con.prepareStatement(sql);
+                rs = ps.executeQuery();
+                while(rs.next()) {
+                    int a = rs.getRow();
+                    row2 = worksheet.createRow((short) a);
+                    row2.createCell(0).setCellValue(rs.getString(1));
+                    row2.createCell(1).setCellValue(rs.getString(2));
+                    row2.createCell(2).setCellValue(rs.getString(3));
+                }
+                workbook.write(fileOut);
+                fileOut.flush();
+                fileOut.close();
+                rs.close();
+                ps.close();
+                JOptionPane.showMessageDialog(null, "Data Model berhasil di export ke D:/");
+            } catch(IOException | SQLException e) {
+                JOptionPane.showMessageDialog(null, e);
+            }
+        }
+    }
+    
     private void searchUser() {
         try {
             sql = "SELECT u.id as id, u.username as user, p.name AS produk, mo.order_date as orderdate "
@@ -3059,6 +3435,7 @@ public class Dashboard extends javax.swing.JFrame {
     
     private void showDataApparel() {
         this.setTitle("Data Apparel");
+        exportExcel.setVisible(false);
         searchField.setVisible(true);
         searchBtn.setVisible(true);
         insertBtn.setVisible(true);
@@ -3066,6 +3443,7 @@ public class Dashboard extends javax.swing.JFrame {
         deleteBtn.setText("DELETE ALL");
         listId.clear();
         showAll.setVisible(false);
+        exportExcel.setVisible(true);
         
         JPanel tableBox = new JPanel();
         tableBox.setBackground(Color.white);
@@ -3138,6 +3516,7 @@ public class Dashboard extends javax.swing.JFrame {
     
     private void showDataModel() {
         this.setTitle("Data Model");
+        exportExcel.setVisible(false);
         searchField.setVisible(true);
         searchBtn.setVisible(true);
         insertBtn.setVisible(true);
@@ -3145,6 +3524,7 @@ public class Dashboard extends javax.swing.JFrame {
         deleteBtn.setText("DELETE ALL");
         listId.clear();
         showAll.setVisible(false);
+        exportExcel.setVisible(true);
         
         JPanel tableBox = new JPanel();
         tableBox.setBackground(Color.white);
@@ -3266,6 +3646,7 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JButton deleteBtn;
     private javax.swing.JButton editBtn;
     private javax.swing.JPanel editForm;
+    private javax.swing.JButton exportExcel;
     private javax.swing.JComboBox<String> filterTahun;
     private javax.swing.JTextField hargaField;
     private javax.swing.JButton imageBtn;
@@ -3281,6 +3662,7 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
     private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
