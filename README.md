@@ -12,3 +12,10 @@ Aplikasi jual beli sepatu Nike serta pengelolaan Admin. Aplikasi ini juga bertuj
 ## Admin
 - Username  : admingateng
 - Password  : admin123
+
+## Configuration
+| Nama konfig | Lokasi |
+|---------------|--------|
+| Koneksi Admin | [/src/admin/Connect.java](https://github.com/novandi18/nikeshop/blob/master/src/admin/Connect.java) |
+| Koneksi Pengguna | [/src/main/Config.java](https://github.com/novandi18/nikeshop/blob/master/src/main/Config.java) |
+| Assets | [/src/assets/](https://github.com/novandi18/nikeshop/tree/master/src/assets) |
