@@ -120,7 +120,6 @@ public class Login extends javax.swing.JFrame {
         alertUsername = new javax.swing.JLabel();
         alertPassword = new javax.swing.JLabel();
         alertCheck = new javax.swing.JLabel();
-        jLabel1 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(390, 540));
@@ -234,17 +233,6 @@ public class Login extends javax.swing.JFrame {
         alertCheck.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 0, 51), 0));
         alertCheck.setOpaque(true);
 
-        jLabel1.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
-        jLabel1.setForeground(new java.awt.Color(255, 255, 255));
-        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        jLabel1.setText("Daftar disini");
-        jLabel1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        jLabel1.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jLabel1MouseClicked(evt);
-            }
-        });
-
         javax.swing.GroupLayout LoginFormLayout = new javax.swing.GroupLayout(LoginForm);
         LoginForm.setLayout(LoginFormLayout);
         LoginFormLayout.setHorizontalGroup(
@@ -274,8 +262,7 @@ public class Login extends javax.swing.JFrame {
                             .addComponent(username, javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(password, javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(alertUsername, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(alertPassword, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 310, Short.MAX_VALUE)
-                            .addComponent(jLabel1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                            .addComponent(alertPassword, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 310, Short.MAX_VALUE)))
                     .addGroup(LoginFormLayout.createSequentialGroup()
                         .addGap(140, 140, 140)
                         .addComponent(submit, javax.swing.GroupLayout.PREFERRED_SIZE, 108, javax.swing.GroupLayout.PREFERRED_SIZE)))
@@ -311,9 +298,7 @@ public class Login extends javax.swing.JFrame {
                 .addComponent(alertPassword)
                 .addGap(55, 55, 55)
                 .addComponent(submit, javax.swing.GroupLayout.PREFERRED_SIZE, 44, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(26, 26, 26)
-                .addComponent(jLabel1)
-                .addContainerGap(57, Short.MAX_VALUE))
+                .addContainerGap(99, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -446,12 +431,6 @@ public class Login extends javax.swing.JFrame {
         yy = evt.getY();
     }//GEN-LAST:event_LoginFormMousePressed
 
-    private void jLabel1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel1MouseClicked
-        this.setVisible(false);
-        Register r = new Register();
-        r.setVisible(true);
-    }//GEN-LAST:event_jLabel1MouseClicked
-
     /**
      * @param args the command line arguments
      */
@@ -491,7 +470,6 @@ public class Login extends javax.swing.JFrame {
     private javax.swing.JLabel alertPassword;
     private javax.swing.JLabel alertUsername;
     private javax.swing.JLabel closeWindow;
-    private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel logo;
     private javax.swing.JLabel minimize;
     private javax.swing.JPasswordField password;

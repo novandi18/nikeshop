@@ -33,6 +33,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.imageio.ImageIO;
@@ -106,6 +108,7 @@ public class Dashboard extends javax.swing.JFrame {
     
     public void userSession(String username) {
         userLogin = username;
+        welcomeName.setText(username);
     }
     
     private void showDataAdmin() {
@@ -113,8 +116,6 @@ public class Dashboard extends javax.swing.JFrame {
         exportExcel.setVisible(false);
         searchField.setVisible(true);
         searchBtn.setVisible(true);
-        insertBtn.setVisible(true);
-        editBtn.setVisible(false);
         deleteBtn.setText("DELETE ALL");
         listId.clear();
         showAll.setVisible(false);
@@ -133,6 +134,7 @@ public class Dashboard extends javax.swing.JFrame {
         table.addColumn("#");
         table.addColumn("Id");
         table.addColumn("Username");
+        table.addColumn("Role");
         try {
             sql = "SELECT * FROM admin WHERE username != ?";
             ps = con.prepareStatement(sql);
@@ -140,46 +142,62 @@ public class Dashboard extends javax.swing.JFrame {
             rs = ps.executeQuery();
             while(rs.next()) {
                 table.addRow(new Object[] {
-                    "", rs.getString(1), rs.getString(2)
+                    "", rs.getString(1), rs.getString(2), rs.getString(4)
                 });
             }
             tb.setModel(table);
-            tb.addMouseListener(new java.awt.event.MouseAdapter() {
-                @Override
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    int row = tb.getSelectedRow();
-                    String check = tb.getModel().getValueAt(row, 0).toString();
-                    String rowData = tb.getModel().getValueAt(row, 2).toString();
-
-                    if(check.equals("")) {
-                        tb.setValueAt("Dipilih", row, 0);
-                        listId.add(rowData);
-                        deleteBtn.setText("DELETE (" + listId.size() + ")");
-                    } else {
-                        tb.setValueAt("", row, 0);
-                        listId.remove(rowData);
-                        if(listId.size() < 1) {
-                            deleteBtn.setText("DELETE ALL");
-                        } else {
-                            deleteBtn.setText("DELETE (" + listId.size() + ")");
-                        }
-                    }
-
-                    dataClicked = rowData;
-                    editFormMode = "update";
-                    alertPass.setVisible(true);
+            
+            sql  = "SELECT role FROM admin WHERE username = ?";
+            ps = con.prepareStatement(sql);
+            ps.setString(1, userLogin);
+            rs = ps.executeQuery();
+            while(rs.next()) {
+                if(rs.getString("role").equals("super")) {
                     insertBtn.setVisible(true);
-                    titleForm1.setForeground(new java.awt.Color(0, 153, 0));
-                    submitAdminForm.setBackground(new java.awt.Color(0, 153, 0));
-                    if(adminForm.isShowing()) {
-                        showEditAdmin(rowData);
-                        titleForm1.setText("Edit Admin");
-                        editBtn.setVisible(false);
-                    } else {
-                        editBtn.setVisible(true);
-                    }
+                    deleteBtn.setVisible(true);
+                    
+                    tb.addMouseListener(new java.awt.event.MouseAdapter() {
+                        @Override
+                        public void mouseClicked(java.awt.event.MouseEvent evt) {
+                            int row = tb.getSelectedRow();
+                            String check = tb.getModel().getValueAt(row, 0).toString();
+                            String rowData = tb.getModel().getValueAt(row, 2).toString();
+
+                            if(check.equals("")) {
+                                tb.setValueAt("Dipilih", row, 0);
+                                listId.add(rowData);
+                                deleteBtn.setText("DELETE (" + listId.size() + ")");
+                            } else {
+                                tb.setValueAt("", row, 0);
+                                listId.remove(rowData);
+                                if(listId.size() < 1) {
+                                    deleteBtn.setText("DELETE ALL");
+                                } else {
+                                    deleteBtn.setText("DELETE (" + listId.size() + ")");
+                                }
+                            }
+
+                            dataClicked = rowData;
+                            editFormMode = "update";
+                            alertPass.setVisible(true);
+                            insertBtn.setVisible(true);
+                            titleForm1.setForeground(new java.awt.Color(0, 153, 0));
+                            submitAdminForm.setBackground(new java.awt.Color(0, 153, 0));
+                            if(adminForm.isShowing()) {
+                                showEditAdmin(rowData);
+                                titleForm1.setText("Edit Admin");
+                                editBtn.setVisible(false);
+                            } else {
+                                editBtn.setVisible(true);
+                            }
+                        }
+                    });
+                } else {
+                    insertBtn.setVisible(false);
+                    editBtn.setVisible(false);
+                    deleteBtn.setVisible(false);
                 }
-            });
+            }
         } catch(SQLException e) {
             JOptionPane.showMessageDialog(null, e);
         }
@@ -190,12 +208,13 @@ public class Dashboard extends javax.swing.JFrame {
     
     private void showEditAdmin(String username) {
         try {
-            sql = "SELECT username FROM admin WHERE username = ?";
+            sql = "SELECT username, role FROM admin WHERE username = ?";
             ps = con.prepareStatement(sql);
             ps.setString(1, username);
             rs = ps.executeQuery();
             while(rs.next()) {
                 usernameField.setText(rs.getString("username"));
+                roleField.setSelectedItem(rs.getString("role"));
             }
         } catch(SQLException e) {
             JOptionPane.showMessageDialog(null, e);
@@ -438,6 +457,33 @@ public class Dashboard extends javax.swing.JFrame {
         insertBtn.setVisible(false);
     }
     
+    private void checkEstimated() {
+        List<String> listIdOrder = new ArrayList<>();
+        String dateNow = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        
+        sql = "SELECT id_order, estimated_date FROM myorder WHERE estimated_date <= ? AND `status` = ?";
+        try {
+            ps = con.prepareStatement(sql);
+            ps.setString(1, dateNow);
+            ps.setString(2, "Sedang diproses");
+            rs = ps.executeQuery();
+            boolean est = false;
+            while(rs.next()) {
+                listIdOrder.add(rs.getString("id_order"));
+                est = true;
+            }
+            
+            if(est == true) {
+                sql = "UPDATE myorder SET `status` = ? WHERE id_order IN (" + String.join(",", listIdOrder) + ")";
+                ps = con.prepareStatement(sql);
+                ps.setString(1, "Berhasil dikirim");
+                ps.executeUpdate();
+            }
+        } catch (SQLException ex) {
+            System.out.println(ex);
+        }
+    }
+    
     private DefaultCategoryDataset createLineDataset(String tahun) {
         DefaultCategoryDataset dataset = new DefaultCategoryDataset();
         try {
@@ -474,6 +520,8 @@ public class Dashboard extends javax.swing.JFrame {
                 dataset.addValue(rs.getString("November") == null ? 0 : Integer.parseInt(rs.getString("November")) , "Pendapatan" , "November");
                 dataset.addValue(rs.getString("Desember") == null ? 0 : Integer.parseInt(rs.getString("Desember")) , "Pendapatan" , "Desember");
             }
+            
+            checkEstimated();
         } catch(SQLException e) {
             JOptionPane.showMessageDialog(null, e);
         }
@@ -704,6 +752,8 @@ public class Dashboard extends javax.swing.JFrame {
         passwordField = new javax.swing.JPasswordField();
         submitAdminForm = new javax.swing.JButton();
         alertPass = new javax.swing.JLabel();
+        jLabel17 = new javax.swing.JLabel();
+        roleField = new javax.swing.JComboBox<>();
         apparelModelP = new javax.swing.JPanel();
         closeFormAdmin1 = new javax.swing.JLabel();
         apparelModelT = new javax.swing.JLabel();
@@ -1120,6 +1170,14 @@ public class Dashboard extends javax.swing.JFrame {
         editBtn.setContentAreaFilled(false);
         editBtn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         editBtn.setOpaque(true);
+        editBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                editBtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                editBtnMouseExited(evt);
+            }
+        });
         editBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 editBtnActionPerformed(evt);
@@ -1134,6 +1192,14 @@ public class Dashboard extends javax.swing.JFrame {
         insertBtn.setContentAreaFilled(false);
         insertBtn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         insertBtn.setOpaque(true);
+        insertBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                insertBtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                insertBtnMouseExited(evt);
+            }
+        });
         insertBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 insertBtnActionPerformed(evt);
@@ -1148,6 +1214,14 @@ public class Dashboard extends javax.swing.JFrame {
         deleteBtn.setContentAreaFilled(false);
         deleteBtn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         deleteBtn.setOpaque(true);
+        deleteBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                deleteBtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                deleteBtnMouseExited(evt);
+            }
+        });
         deleteBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 deleteBtnActionPerformed(evt);
@@ -1158,10 +1232,18 @@ public class Dashboard extends javax.swing.JFrame {
         showAll.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
         showAll.setForeground(new java.awt.Color(0, 51, 255));
         showAll.setText("SHOW ALL");
-        showAll.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 204, 255)));
+        showAll.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 51, 255)));
         showAll.setContentAreaFilled(false);
         showAll.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         showAll.setOpaque(true);
+        showAll.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                showAllMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                showAllMouseExited(evt);
+            }
+        });
         showAll.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 showAllActionPerformed(evt);
@@ -1176,6 +1258,14 @@ public class Dashboard extends javax.swing.JFrame {
         exportExcel.setContentAreaFilled(false);
         exportExcel.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         exportExcel.setOpaque(true);
+        exportExcel.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                exportExcelMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                exportExcelMouseExited(evt);
+            }
+        });
         exportExcel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 exportExcelActionPerformed(evt);
@@ -1301,6 +1391,14 @@ public class Dashboard extends javax.swing.JFrame {
         imageBtn.setContentAreaFilled(false);
         imageBtn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         imageBtn.setOpaque(true);
+        imageBtn.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                imageBtnMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                imageBtnMouseExited(evt);
+            }
+        });
         imageBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 imageBtnActionPerformed(evt);
@@ -1318,6 +1416,14 @@ public class Dashboard extends javax.swing.JFrame {
         submitProducts.setContentAreaFilled(false);
         submitProducts.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         submitProducts.setOpaque(true);
+        submitProducts.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                submitProductsMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                submitProductsMouseExited(evt);
+            }
+        });
         submitProducts.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 submitProductsActionPerformed(evt);
@@ -1441,6 +1547,14 @@ public class Dashboard extends javax.swing.JFrame {
         submitAdminForm.setContentAreaFilled(false);
         submitAdminForm.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         submitAdminForm.setOpaque(true);
+        submitAdminForm.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                submitAdminFormMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                submitAdminFormMouseExited(evt);
+            }
+        });
         submitAdminForm.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 submitAdminFormActionPerformed(evt);
@@ -1451,6 +1565,15 @@ public class Dashboard extends javax.swing.JFrame {
         alertPass.setForeground(new java.awt.Color(51, 51, 51));
         alertPass.setText("Kosongkan jika password tidak ingin diubah");
 
+        jLabel17.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
+        jLabel17.setForeground(new java.awt.Color(0, 0, 0));
+        jLabel17.setText("Role");
+
+        roleField.setBackground(new java.awt.Color(255, 255, 255));
+        roleField.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
+        roleField.setForeground(new java.awt.Color(0, 0, 0));
+        roleField.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "super", "admin" }));
+
         javax.swing.GroupLayout adminFormLayout = new javax.swing.GroupLayout(adminForm);
         adminForm.setLayout(adminFormLayout);
         adminFormLayout.setHorizontalGroup(
@@ -1458,6 +1581,7 @@ public class Dashboard extends javax.swing.JFrame {
             .addGroup(adminFormLayout.createSequentialGroup()
                 .addGap(17, 17, 17)
                 .addGroup(adminFormLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(roleField, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(usernameField)
                     .addComponent(passwordField)
                     .addGroup(adminFormLayout.createSequentialGroup()
@@ -1473,6 +1597,7 @@ public class Dashboard extends javax.swing.JFrame {
                     .addComponent(submitAdminForm, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(adminFormLayout.createSequentialGroup()
                         .addGroup(adminFormLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel17)
                             .addComponent(alertPass)
                             .addComponent(jLabel15))
                         .addGap(0, 0, Short.MAX_VALUE))))
@@ -1494,9 +1619,13 @@ public class Dashboard extends javax.swing.JFrame {
                 .addComponent(passwordField, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(alertPass)
-                .addGap(63, 63, 63)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel17)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(roleField, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(48, 48, 48)
                 .addComponent(submitAdminForm, javax.swing.GroupLayout.PREFERRED_SIZE, 43, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(214, Short.MAX_VALUE))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
         apparelModelP.setBackground(new java.awt.Color(255, 255, 255));
@@ -1531,6 +1660,14 @@ public class Dashboard extends javax.swing.JFrame {
         apparelModelB.setContentAreaFilled(false);
         apparelModelB.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         apparelModelB.setOpaque(true);
+        apparelModelB.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                apparelModelBMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                apparelModelBMouseExited(evt);
+            }
+        });
         apparelModelB.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 apparelModelBActionPerformed(evt);
@@ -2110,7 +2247,7 @@ public class Dashboard extends javax.swing.JFrame {
                 }
                 imageChoose = null;
                 filePath = null;
-                titleForm.setText("Insert Data");
+                titleForm.setText("Add Product");
                 titleForm.setForeground(new java.awt.Color(0,51,204));
                 submitProducts.setBackground(new java.awt.Color(0,51,204));
                 nameField.setText("");
@@ -2132,7 +2269,7 @@ public class Dashboard extends javax.swing.JFrame {
                 }   alertPass.setVisible(false);
                 usernameField.setText("");
                 passwordField.setText("");
-                titleForm1.setText("Insert Data");
+                titleForm1.setText("Add Admin");
                 titleForm1.setForeground(new java.awt.Color(0,51,204));
                 submitAdminForm.setBackground(new java.awt.Color(0,51,204));
                 editFormMode = "insert";
@@ -2449,7 +2586,11 @@ public class Dashboard extends javax.swing.JFrame {
     
     private void closeFormAdminMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_closeFormAdminMouseClicked
         adminForm.setVisible(false);
-        editBtn.setVisible(true);
+        if(listId.size() < 1) {
+            editBtn.setVisible(false);
+        } else {
+            editBtn.setVisible(true);
+        }
         insertBtn.setVisible(true);
     }//GEN-LAST:event_closeFormAdminMouseClicked
 
@@ -2512,14 +2653,16 @@ public class Dashboard extends javax.swing.JFrame {
                     JOptionPane.showMessageDialog(null, "Username sudah digunakan oleh admin lain, mohon gunakan username lain");
                 } else {
                     String passHashed = hashPassword(String.valueOf(passwordField.getPassword()));
-                    sql = "INSERT INTO admin(username, password) VALUES(?, ?)";
+                    sql = "INSERT INTO admin(username, password, role) VALUES(?, ?, ?)";
                     ps = con.prepareStatement(sql);
                     ps.setString(1, usernameField.getText());
                     ps.setString(2, passHashed);
+                    ps.setString(3, (String) roleField.getSelectedItem());
                     ps.executeUpdate();
                     
                     usernameField.setText("");
                     passwordField.setText("");
+                    roleField.setSelectedIndex(0);
                     contentPanel.removeAll();
                     contentPanel.revalidate();
                     contentPanel.repaint();
@@ -2587,14 +2730,6 @@ public class Dashboard extends javax.swing.JFrame {
         }
     }
     
-    private void submitAdminFormActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitAdminFormActionPerformed
-        if(editFormMode.equals("insert")) {
-            insertAdmin();
-        } else if(editFormMode.equals("update")) {
-            updateAdmin(dataClicked);
-        }
-    }//GEN-LAST:event_submitAdminFormActionPerformed
-
     private void closeFormAdmin1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_closeFormAdmin1MouseClicked
         apparelModelP.setVisible(false);
         insertBtn.setVisible(true);
@@ -2961,6 +3096,94 @@ public class Dashboard extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_exportExcelActionPerformed
+
+    private void imageBtnMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_imageBtnMouseEntered
+        imageBtn.setBackground(new java.awt.Color(212, 129, 4));
+        imageBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(212, 129, 4)));
+    }//GEN-LAST:event_imageBtnMouseEntered
+
+    private void imageBtnMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_imageBtnMouseExited
+        imageBtn.setBackground(new java.awt.Color(255, 153, 0));
+        imageBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 153, 0)));
+    }//GEN-LAST:event_imageBtnMouseExited
+
+    private void submitProductsMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_submitProductsMouseEntered
+        submitProducts.setBackground(new java.awt.Color(0, 102, 0));
+    }//GEN-LAST:event_submitProductsMouseEntered
+
+    private void submitProductsMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_submitProductsMouseExited
+        submitProducts.setBackground(new java.awt.Color(0, 153, 0));
+    }//GEN-LAST:event_submitProductsMouseExited
+
+    private void submitAdminFormActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitAdminFormActionPerformed
+        if(editFormMode.equals("insert")) {
+            insertAdmin();
+        } else if(editFormMode.equals("update")) {
+            updateAdmin(dataClicked);
+        }
+    }//GEN-LAST:event_submitAdminFormActionPerformed
+
+    private void submitAdminFormMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_submitAdminFormMouseExited
+        submitAdminForm.setBackground(new java.awt.Color(0, 51, 204));
+    }//GEN-LAST:event_submitAdminFormMouseExited
+
+    private void submitAdminFormMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_submitAdminFormMouseEntered
+        submitAdminForm.setBackground(new java.awt.Color(0, 41, 166));
+    }//GEN-LAST:event_submitAdminFormMouseEntered
+
+    private void apparelModelBMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_apparelModelBMouseEntered
+        apparelModelB.setBackground(new java.awt.Color(0, 41, 166));
+    }//GEN-LAST:event_apparelModelBMouseEntered
+
+    private void apparelModelBMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_apparelModelBMouseExited
+        apparelModelB.setBackground(new java.awt.Color(0, 51, 204));
+    }//GEN-LAST:event_apparelModelBMouseExited
+
+    private void editBtnMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_editBtnMouseEntered
+        editBtn.setBackground(new java.awt.Color(0, 102, 0));
+        editBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 102, 0)));
+    }//GEN-LAST:event_editBtnMouseEntered
+
+    private void editBtnMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_editBtnMouseExited
+        editBtn.setBackground(new java.awt.Color(0, 153, 0));
+        editBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 153, 0)));
+    }//GEN-LAST:event_editBtnMouseExited
+
+    private void insertBtnMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_insertBtnMouseEntered
+        insertBtn.setBackground(new java.awt.Color(0, 41, 166));
+        insertBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 41, 166)));
+    }//GEN-LAST:event_insertBtnMouseEntered
+
+    private void insertBtnMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_insertBtnMouseExited
+        insertBtn.setBackground(new java.awt.Color(0, 51, 204));
+        insertBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 51, 204)));
+    }//GEN-LAST:event_insertBtnMouseExited
+
+    private void deleteBtnMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_deleteBtnMouseEntered
+        deleteBtn.setBackground(new java.awt.Color(201, 2, 42));
+        deleteBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(201, 2, 42)));
+    }//GEN-LAST:event_deleteBtnMouseEntered
+
+    private void deleteBtnMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_deleteBtnMouseExited
+        deleteBtn.setBackground(new java.awt.Color(255, 0, 51));
+        deleteBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 0, 51)));
+    }//GEN-LAST:event_deleteBtnMouseExited
+
+    private void showAllMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_showAllMouseEntered
+        showAll.setBackground(new java.awt.Color(89, 141, 194));
+    }//GEN-LAST:event_showAllMouseEntered
+
+    private void showAllMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_showAllMouseExited
+        showAll.setBackground(new java.awt.Color(153, 204, 255));
+    }//GEN-LAST:event_showAllMouseExited
+
+    private void exportExcelMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_exportExcelMouseEntered
+        exportExcel.setBackground(new java.awt.Color(196, 196, 102));
+    }//GEN-LAST:event_exportExcelMouseEntered
+
+    private void exportExcelMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_exportExcelMouseExited
+        exportExcel.setBackground(new java.awt.Color(255, 255, 153));
+    }//GEN-LAST:event_exportExcelMouseExited
 
     private void exportPenghasilan(String tahun) {
         JFrame parentFrame = new JFrame();
@@ -3661,6 +3884,7 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel14;
     private javax.swing.JLabel jLabel15;
     private javax.swing.JLabel jLabel16;
+    private javax.swing.JLabel jLabel17;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JLabel jLabel4;
@@ -3683,6 +3907,7 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JTextField nameField;
     private javax.swing.JPasswordField passwordField;
     private javax.swing.JLabel productBtn;
+    private javax.swing.JComboBox<String> roleField;
     private javax.swing.JButton searchBtn;
     private javax.swing.JTextField searchField;
     private javax.swing.JButton showAll;

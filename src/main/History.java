@@ -35,8 +35,7 @@ public class History extends javax.swing.JFrame {
     Statement stat;
     PreparedStatement ps;
     ResultSet rs;
-    String sql, userLogin;
-    List<String> listToDelete = new ArrayList<>();
+    String sql, userLogin, idP;
     List<String> estId = new ArrayList<>();
     
     /**
@@ -56,10 +55,10 @@ public class History extends javax.swing.JFrame {
     
     public void loadHistory(String username) {
         userLogin = username;
+        ptBtn.setVisible(false);
         DefaultTableModel tb = new DefaultTableModel();
         String dateNow = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
         
-        tb.addColumn("#");
         tb.addColumn("No");
         tb.addColumn("ID Order");
         tb.addColumn("Nama Produk");
@@ -99,7 +98,7 @@ public class History extends javax.swing.JFrame {
                 }
                 
                 tb.addRow(new Object[] {
-                    "", no++, rs.getString(1), rs.getString(2),
+                    no++, rs.getString(1), rs.getString(2),
                     rs.getString(3), rs.getString(4),
                     rs.getString(5), "Rp. " + currencyID(Integer.parseInt(rs.getString(6))),
                     rs.getString(7), rs.getString(8),
@@ -211,11 +210,11 @@ public class History extends javax.swing.JFrame {
         jPanel2 = new javax.swing.JPanel();
         searchField = new javax.swing.JTextField();
         searchBtn = new javax.swing.JButton();
-        deleteBtn = new javax.swing.JButton();
         exportExcel = new javax.swing.JButton();
         jScrollPane2 = new javax.swing.JScrollPane();
         tbHistory = new javax.swing.JTable();
         alertBox = new javax.swing.JLabel();
+        ptBtn = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setBackground(new java.awt.Color(255, 255, 255));
@@ -233,6 +232,7 @@ public class History extends javax.swing.JFrame {
         jLabel2.setText("Riwayat Pembelian");
 
         jButton1.setText("Refresh");
+        jButton1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         jButton1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jButton1ActionPerformed(evt);
@@ -276,26 +276,25 @@ public class History extends javax.swing.JFrame {
         searchBtn.setBackground(new java.awt.Color(0, 0, 0));
         searchBtn.setForeground(new java.awt.Color(255, 255, 255));
         searchBtn.setText("CARI");
+        searchBtn.setBorder(null);
+        searchBtn.setBorderPainted(false);
+        searchBtn.setContentAreaFilled(false);
+        searchBtn.setOpaque(true);
         searchBtn.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 searchBtnActionPerformed(evt);
             }
         });
 
-        deleteBtn.setBackground(new java.awt.Color(255, 0, 51));
-        deleteBtn.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
-        deleteBtn.setForeground(new java.awt.Color(255, 255, 255));
-        deleteBtn.setText("HAPUS SEMUA");
-        deleteBtn.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                deleteBtnActionPerformed(evt);
-            }
-        });
-
-        exportExcel.setBackground(new java.awt.Color(0, 153, 51));
+        exportExcel.setBackground(new java.awt.Color(255, 204, 0));
         exportExcel.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
-        exportExcel.setForeground(new java.awt.Color(255, 255, 255));
+        exportExcel.setForeground(new java.awt.Color(0, 0, 0));
         exportExcel.setText("EXPORT TO EXCEL");
+        exportExcel.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        exportExcel.setBorderPainted(false);
+        exportExcel.setContentAreaFilled(false);
+        exportExcel.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        exportExcel.setOpaque(true);
         exportExcel.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 exportExcelActionPerformed(evt);
@@ -338,6 +337,21 @@ public class History extends javax.swing.JFrame {
         alertBox.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 0));
         alertBox.setOpaque(true);
 
+        ptBtn.setBackground(new java.awt.Color(255, 51, 51));
+        ptBtn.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
+        ptBtn.setForeground(new java.awt.Color(255, 255, 255));
+        ptBtn.setText("PESANAN DITERIMA");
+        ptBtn.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+        ptBtn.setBorderPainted(false);
+        ptBtn.setContentAreaFilled(false);
+        ptBtn.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        ptBtn.setOpaque(true);
+        ptBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ptBtnActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
         jPanel2.setLayout(jPanel2Layout);
         jPanel2Layout.setHorizontalGroup(
@@ -346,15 +360,15 @@ public class History extends javax.swing.JFrame {
                 .addGap(34, 34, 34)
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(alertBox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, 866, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
                         .addComponent(searchField, javax.swing.GroupLayout.PREFERRED_SIZE, 249, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                         .addComponent(searchBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 61, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(exportExcel, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(ptBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(deleteBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 113, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addComponent(exportExcel, javax.swing.GroupLayout.PREFERRED_SIZE, 138, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addGap(34, 34, 34))
         );
         jPanel2Layout.setVerticalGroup(
@@ -364,8 +378,8 @@ public class History extends javax.swing.JFrame {
                 .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(searchField, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(searchBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(deleteBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(exportExcel, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(exportExcel, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(ptBtn, javax.swing.GroupLayout.PREFERRED_SIZE, 32, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(alertBox)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -409,31 +423,6 @@ public class History extends javax.swing.JFrame {
         alertBox.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 153), 0));
         loadHistory(userLogin);
     }//GEN-LAST:event_jButton1ActionPerformed
-
-    private void tbHistoryMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tbHistoryMouseClicked
-        int row = tbHistory.getSelectedRow();
-        String selectedData = tbHistory.getModel().getValueAt(row, 2).toString();
-        String checkSelected = tbHistory.getModel().getValueAt(row, 0).toString();
-        String checkStatus = tbHistory.getModel().getValueAt(row, 10).toString();
-        
-        if(checkStatus.equals("Sedang diproses")) {
-            JOptionPane.showMessageDialog(null, "Data order ini tidak dapat dipilih, karena produk sedang diproses");
-        } else {
-            if(checkSelected.equals("")) {
-                tbHistory.setValueAt("Dipilih", row, 0);
-                listToDelete.add(selectedData);
-            } else {
-                tbHistory.setValueAt("", row, 0);
-                listToDelete.remove(selectedData);
-            }
-        }
-        
-        if(listToDelete.size() > 0) {
-            deleteBtn.setText("Hapus (" + listToDelete.size() + ")");
-        } else {
-            deleteBtn.setText("Hapus Semua");
-        }
-    }//GEN-LAST:event_tbHistoryMouseClicked
 
     private void searchBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchBtnActionPerformed
         DefaultTableModel tb = new DefaultTableModel();
@@ -487,18 +476,36 @@ public class History extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_exportExcelActionPerformed
 
-    private void deleteBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deleteBtnActionPerformed
-        try {
-            sql = "DELETE FROM myorder" + (listToDelete.size() > 0 ? " WHERE id_order IN (" + String.join(",", listToDelete) + ")" : " WHERE status != 'Sedang diproses' AND username = '" + userLogin + "'");
-            stat = con.createStatement();
-            stat.executeUpdate(sql);
-            JOptionPane.showMessageDialog(null, "Data Riwayat Pesanan berhasil dihapus");
-            loadHistory(userLogin);
-        } catch(SQLException e) {
-            JOptionPane.showMessageDialog(null, "Tidak dapat menghapus, coba lagi nanti");
-//            JOptionPane.showMessageDialog(null, e);
+    private void ptBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ptBtnActionPerformed
+        int dialogButton = JOptionPane.YES_NO_OPTION;
+        int dialogResult = JOptionPane.showConfirmDialog(null, "Yakin pesanan ini sudah diterima?", "Pesanan Diterima", dialogButton);
+        if(dialogResult == 0) {
+            try {
+                sql = "UPDATE myorder SET `status` = ? WHERE id_order = ?";
+                ps = con.prepareStatement(sql);
+                ps.setString(1, "Berhasil dikirim");
+                ps.setString(2, idP);
+                ps.executeUpdate();
+                loadHistory(userLogin);
+                
+                JOptionPane.showMessageDialog(null, "Berhasil mengubah status pesanan");
+            } catch(SQLException e) {
+                JOptionPane.showMessageDialog(null, e);
+            }
         }
-    }//GEN-LAST:event_deleteBtnActionPerformed
+    }//GEN-LAST:event_ptBtnActionPerformed
+
+    private void tbHistoryMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tbHistoryMouseClicked
+        int row = tbHistory.getSelectedRow();
+        String id = tbHistory.getModel().getValueAt(row, 1).toString();
+        String check = tbHistory.getModel().getValueAt(row, 9).toString();
+        if(check.equals("Sedang diproses")) {
+            idP = id;
+            ptBtn.setVisible(true);
+        } else {
+            ptBtn.setVisible(false);
+        }
+    }//GEN-LAST:event_tbHistoryMouseClicked
 
     /**
      * @param args the command line arguments
@@ -535,7 +542,6 @@ public class History extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel alertBox;
-    private javax.swing.JButton deleteBtn;
     private javax.swing.JButton exportExcel;
     private javax.swing.JPanel headerPanel;
     private javax.swing.JButton jButton1;
@@ -544,6 +550,7 @@ public class History extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel1;
     private javax.swing.JPanel jPanel2;
     private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JButton ptBtn;
     private javax.swing.JButton searchBtn;
     private javax.swing.JTextField searchField;
     private javax.swing.JTable tbHistory;
