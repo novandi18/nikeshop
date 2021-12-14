@@ -25,6 +25,10 @@ import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import java.sql.PreparedStatement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import javax.swing.SwingWorker;
 
 /**
  *
@@ -35,7 +39,9 @@ public class Home extends javax.swing.JFrame {
     Statement stat;
     PreparedStatement ps;
     ResultSet rs;
-    String sql, username_login;
+    String sql, username_login, mode, itemApparel, itemModel, itemCategory;
+    private LoadWorker worker;
+    List<String> listProduct = new ArrayList<>();
     
     /**
      * Creates new form Home
@@ -106,13 +112,174 @@ public class Home extends javax.swing.JFrame {
         }
     }
     
-    void showAllProduct() {
-        try {
-            sql = "SELECT * FROM products";
-            rs = stat.executeQuery(sql);
+    private class LoadWorker extends SwingWorker<Boolean, Void> {
+        @Override
+        protected void done() {
+            try {
+                if (get() != null) {
+                    progressBar.setVisible(false);
+                    listProduct.clear();
+                }
+            } catch (InterruptedException | ExecutionException ex) {
+                System.out.println(ex);
+            }
+        }
+
+        @Override
+        protected Boolean doInBackground() throws SQLException, InterruptedException, MalformedURLException, IOException {
+            progressBar.setVisible(true);
+
+            Component[] componentList = subContentPanel.getComponents();
+            for(Component c : componentList) {
+                if(c instanceof JLabel) {
+                   subContentPanel.remove(c);
+                }
+            }
+
+            subContentPanel.revalidate();
+            subContentPanel.repaint();
+
             Home home = new Home();
+            int idx = 0;
+            int size = listProduct.size();
+            int persen = 0;
             
-            while(rs.next()) {
+            if(mode.equals("all")) {
+                sql = "SELECT * FROM products";
+            } else if(mode.equals("apparel")) {
+                sql = "SELECT * FROM products" + 
+                        (cariProduct.getText().equals("") && itemApparel.equals("Semua") && filterModel.getSelectedItem().equals("Semua") && filterCategory.getSelectedItem().equals("Semua")
+                            ? ""
+                            : " WHERE") +
+                        (cariProduct.getText().equals("") 
+                            ? itemApparel.equals("Semua") 
+                                ? filterModel.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : itemApparel.equals("Semua")
+                                        ? ""
+                                        : " apparel = '" + itemApparel + "'"
+                                : " apparel = '" + itemApparel + "'" 
+                            : itemApparel.equals("Semua")
+                                ? " name LIKE '%" + cariProduct.getText() + "%'"
+                                : " name LIKE '%" + cariProduct.getText() + "%' AND apparel = '" + itemApparel+ "'") +
+                        (cariProduct.getText().equals("")
+                            ? itemApparel.equals("Semua")
+                                ? filterModel.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : " model = '" + filterModel.getSelectedItem() + "'"
+                                : filterModel.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : " AND model = '" + filterModel.getSelectedItem() + "'"
+                            : filterModel.getSelectedItem().equals("Semua")
+                                ? ""
+                                : " AND model = '" + filterModel.getSelectedItem() + "'") +
+                        (cariProduct.getText().equals("")
+                            ? itemApparel.equals("Semua")
+                                ? filterModel.getSelectedItem().equals("Semua")
+                                    ? filterCategory.getSelectedItem().equals("Semua")
+                                        ? ""
+                                        : filterCategory.getSelectedItem().equals("Semua")
+                                            ? ""
+                                            : " AND category = '" + filterCategory.getSelectedItem() + "'"
+                                    : " AND category = '" + filterCategory.getSelectedItem() + "'"
+                                : filterCategory.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : " AND category = '" + filterCategory.getSelectedItem() + "'"
+                            : filterCategory.getSelectedItem().equals("Semua")
+                                ? ""
+                                : " AND category = '" + filterCategory.getSelectedItem() + "'");
+            } else if(mode.equals("model")) {
+                sql = "SELECT * FROM products" + 
+                        (cariProduct.getText().equals("") && filterApparel.getSelectedItem().equals("Semua") && itemModel.equals("Semua") && filterCategory.getSelectedItem().equals("Semua")
+                            ? ""
+                            : " WHERE") +
+                        (cariProduct.getText().equals("") 
+                            ? filterApparel.getSelectedItem().equals("Semua") 
+                                ? itemModel.equals("Semua")
+                                    ? ""
+                                    : filterApparel.getSelectedItem().equals("Semua")
+                                        ? ""
+                                        : " apparel = '" + filterApparel.getSelectedItem() + "'"
+                                : " apparel = '" + filterApparel.getSelectedItem() + "'" 
+                            : filterApparel.getSelectedItem().equals("Semua")
+                                ? " name LIKE '%" + cariProduct.getText() + "%'"
+                                : " name LIKE '%" + cariProduct.getText() + "%' AND apparel = '" + filterApparel.getSelectedItem() + "'") +
+                        (cariProduct.getText().equals("")
+                            ? filterApparel.getSelectedItem().equals("Semua")
+                                ? itemModel.equals("Semua")
+                                    ? ""
+                                    : " model = '" + itemModel + "'"
+                                : itemModel.equals("Semua")
+                                    ? ""
+                                    : " AND model = '" + itemModel + "'"
+                            : itemModel.equals("Semua")
+                                ? ""
+                                : " AND model = '" + filterModel.getSelectedItem() + "'") +
+                        (cariProduct.getText().equals("")
+                            ? filterApparel.getSelectedItem().equals("Semua")
+                                ? itemModel.equals("Semua")
+                                    ? filterCategory.getSelectedItem().equals("Semua")
+                                        ? ""
+                                        : " category = '" + filterCategory.getSelectedItem() + "'"
+                                    : filterCategory.getSelectedItem().equals("Semua")
+                                        ? ""
+                                        : " AND category = '" + filterCategory.getSelectedItem() + "'"
+                                : filterCategory.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : " AND category = '" + filterCategory.getSelectedItem() + "'"
+                            : filterCategory.getSelectedItem().equals("Semua")
+                                ? ""
+                                : " AND category = '" + filterCategory.getSelectedItem() + "'");
+            } else if(mode.equals("category")) {
+                sql = "SELECT * FROM products" + 
+                        (cariProduct.getText().equals("") && filterApparel.getSelectedItem().equals("Semua") && filterModel.getSelectedItem().equals("Semua") && itemCategory.equals("Semua")
+                            ? ""
+                            : " WHERE") +
+                        (cariProduct.getText().equals("") 
+                            ? filterApparel.getSelectedItem().equals("Semua") 
+                                ? filterModel.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : filterApparel.getSelectedItem().equals("Semua")
+                                        ? ""
+                                        : " apparel = '" + filterApparel.getSelectedItem() + "'"
+                                : " apparel = '" + filterApparel.getSelectedItem() + "'" 
+                            : filterApparel.getSelectedItem().equals("Semua")
+                                ? " name LIKE '%" + cariProduct.getText() + "%'"
+                                : " name LIKE '%" + cariProduct.getText() + "%' AND apparel = '" + filterApparel.getSelectedItem() + "'") +
+                        (cariProduct.getText().equals("")
+                            ? filterApparel.getSelectedItem().equals("Semua")
+                                ? filterModel.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : " model = '" + filterModel.getSelectedItem() + "'"
+                                : filterModel.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : " AND model = '" + filterModel.getSelectedItem() + "'"
+                            : filterModel.getSelectedItem().equals("Semua")
+                                ? ""
+                                : " AND model = '" + filterModel.getSelectedItem() + "'") +
+                        (cariProduct.getText().equals("")
+                            ? filterApparel.getSelectedItem().equals("Semua")
+                                ? filterModel.getSelectedItem().equals("Semua")
+                                    ? itemCategory.equals("Semua")
+                                        ? ""
+                                        : " category = '" + itemCategory + "'"
+                                    : " AND category = '" + itemCategory + "'"
+                                : itemCategory.equals("Semua")
+                                    ? ""
+                                    : " AND category = '" + itemCategory + "'"
+                            : itemCategory.equals("Semua")
+                                ? ""
+                                : " AND category = '" + itemCategory + "'");
+            } else if(mode.equals("search")) {
+                sql = "SELECT * FROM products WHERE name LIKE ?";
+            }
+            
+            ps = con.prepareStatement(sql);
+            if(mode.equals("search")) ps.setString(1, '%' + cariProduct.getText() + '%');
+            rs = ps.executeQuery();
+            while (rs.next()) {
+                persen = (idx * 100) / size;
+                
                 URL url = new URL("http://localhost/nikeshop/src/assets/img/" + rs.getString("image"));
                 Image image = ImageIO.read(url);
                 
@@ -141,7 +308,7 @@ public class Home extends javax.swing.JFrame {
                             productUI.setVisible(true);
                             productUI.getProductSelected(Integer.parseInt(id), name, apparel, model, category, img, price, stock, username_login);
                         } catch (IOException ex) {
-//                            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+                            System.out.println(ex);
                         }
                     }
                     
@@ -157,10 +324,163 @@ public class Home extends javax.swing.JFrame {
                 });
                 
                 subContentPanel.add(l);
+                progressBar.setValue(persen);
+                idx++;
             }
-        } catch(SQLException | IOException e) {
-            JOptionPane.showMessageDialog(null, e);
+            ps.close();
+            Thread.sleep(1000);
+            return true;
         }
+    }
+    
+    private void getSizeProduct() {
+        try {
+            if(mode.equals("all")) {
+                sql = "SELECT id_product FROM products";
+            } else if(mode.equals("apparel")) {
+                sql = "SELECT id_product FROM products" + 
+                        (cariProduct.getText().equals("") && itemApparel.equals("Semua") && filterModel.getSelectedItem().equals("Semua") && filterCategory.getSelectedItem().equals("Semua")
+                            ? ""
+                            : " WHERE") +
+                        (cariProduct.getText().equals("") 
+                            ? itemApparel.equals("Semua") 
+                                ? filterModel.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : itemApparel.equals("Semua")
+                                        ? ""
+                                        : " apparel = '" + itemApparel + "'"
+                                : " apparel = '" + itemApparel + "'" 
+                            : itemApparel.equals("Semua")
+                                ? " name LIKE '%" + cariProduct.getText() + "%'"
+                                : " name LIKE '%" + cariProduct.getText() + "%' AND apparel = '" + itemApparel+ "'") +
+                        (cariProduct.getText().equals("")
+                            ? itemApparel.equals("Semua")
+                                ? filterModel.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : " model = '" + filterModel.getSelectedItem() + "'"
+                                : filterModel.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : " AND model = '" + filterModel.getSelectedItem() + "'"
+                            : filterModel.getSelectedItem().equals("Semua")
+                                ? ""
+                                : " AND model = '" + filterModel.getSelectedItem() + "'") +
+                        (cariProduct.getText().equals("")
+                            ? itemApparel.equals("Semua")
+                                ? filterModel.getSelectedItem().equals("Semua")
+                                    ? filterCategory.getSelectedItem().equals("Semua")
+                                        ? ""
+                                        : filterCategory.getSelectedItem().equals("Semua")
+                                            ? ""
+                                            : " AND category = '" + filterCategory.getSelectedItem() + "'"
+                                    : " AND category = '" + filterCategory.getSelectedItem() + "'"
+                                : filterCategory.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : " AND category = '" + filterCategory.getSelectedItem() + "'"
+                            : filterCategory.getSelectedItem().equals("Semua")
+                                ? ""
+                                : " AND category = '" + filterCategory.getSelectedItem() + "'");
+            } else if(mode.equals("model")) {
+                sql = "SELECT id_product FROM products" + 
+                        (cariProduct.getText().equals("") && filterApparel.getSelectedItem().equals("Semua") && itemModel.equals("Semua") && filterCategory.getSelectedItem().equals("Semua")
+                            ? ""
+                            : " WHERE") +
+                        (cariProduct.getText().equals("") 
+                            ? filterApparel.getSelectedItem().equals("Semua") 
+                                ? itemModel.equals("Semua")
+                                    ? ""
+                                    : filterApparel.getSelectedItem().equals("Semua")
+                                        ? ""
+                                        : " apparel = '" + filterApparel.getSelectedItem() + "'"
+                                : " apparel = '" + filterApparel.getSelectedItem() + "'" 
+                            : filterApparel.getSelectedItem().equals("Semua")
+                                ? " name LIKE '%" + cariProduct.getText() + "%'"
+                                : " name LIKE '%" + cariProduct.getText() + "%' AND apparel = '" + filterApparel.getSelectedItem() + "'") +
+                        (cariProduct.getText().equals("")
+                            ? filterApparel.getSelectedItem().equals("Semua")
+                                ? itemModel.equals("Semua")
+                                    ? ""
+                                    : " model = '" + itemModel + "'"
+                                : itemModel.equals("Semua")
+                                    ? ""
+                                    : " AND model = '" + itemModel + "'"
+                            : itemModel.equals("Semua")
+                                ? ""
+                                : " AND model = '" + filterModel.getSelectedItem() + "'") +
+                        (cariProduct.getText().equals("")
+                            ? filterApparel.getSelectedItem().equals("Semua")
+                                ? itemModel.equals("Semua")
+                                    ? filterCategory.getSelectedItem().equals("Semua")
+                                        ? ""
+                                        : " category = '" + filterCategory.getSelectedItem() + "'"
+                                    : filterCategory.getSelectedItem().equals("Semua")
+                                        ? ""
+                                        : " AND category = '" + filterCategory.getSelectedItem() + "'"
+                                : filterCategory.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : " AND category = '" + filterCategory.getSelectedItem() + "'"
+                            : filterCategory.getSelectedItem().equals("Semua")
+                                ? ""
+                                : " AND category = '" + filterCategory.getSelectedItem() + "'");
+            } else if(mode.equals("category")) {
+                sql = "SELECT id_product FROM products" + 
+                        (cariProduct.getText().equals("") && filterApparel.getSelectedItem().equals("Semua") && filterModel.getSelectedItem().equals("Semua") && itemCategory.equals("Semua")
+                            ? ""
+                            : " WHERE") +
+                        (cariProduct.getText().equals("") 
+                            ? filterApparel.getSelectedItem().equals("Semua") 
+                                ? filterModel.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : filterApparel.getSelectedItem().equals("Semua")
+                                        ? ""
+                                        : " apparel = '" + filterApparel.getSelectedItem() + "'"
+                                : " apparel = '" + filterApparel.getSelectedItem() + "'" 
+                            : filterApparel.getSelectedItem().equals("Semua")
+                                ? " name LIKE '%" + cariProduct.getText() + "%'"
+                                : " name LIKE '%" + cariProduct.getText() + "%' AND apparel = '" + filterApparel.getSelectedItem() + "'") +
+                        (cariProduct.getText().equals("")
+                            ? filterApparel.getSelectedItem().equals("Semua")
+                                ? filterModel.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : " model = '" + filterModel.getSelectedItem() + "'"
+                                : filterModel.getSelectedItem().equals("Semua")
+                                    ? ""
+                                    : " AND model = '" + filterModel.getSelectedItem() + "'"
+                            : filterModel.getSelectedItem().equals("Semua")
+                                ? ""
+                                : " AND model = '" + filterModel.getSelectedItem() + "'") +
+                        (cariProduct.getText().equals("")
+                            ? filterApparel.getSelectedItem().equals("Semua")
+                                ? filterModel.getSelectedItem().equals("Semua")
+                                    ? itemCategory.equals("Semua")
+                                        ? ""
+                                        : " category = '" + itemCategory + "'"
+                                    : " AND category = '" + itemCategory + "'"
+                                : itemCategory.equals("Semua")
+                                    ? ""
+                                    : " AND category = '" + itemCategory + "'"
+                            : itemCategory.equals("Semua")
+                                ? ""
+                                : " AND category = '" + itemCategory + "'");
+            } else if(mode.equals("search")) {
+                sql = "SELECT id_product FROM products WHERE name LIKE ?";
+            }
+            
+            ps = con.prepareStatement(sql);
+            if(mode.equals("search")) ps.setString(1, '%' + cariProduct.getText() + '%');
+            rs = ps.executeQuery();
+            while(rs.next()) {
+                listProduct.add(rs.getString("id_product"));
+            }
+        } catch(SQLException e) {
+            System.out.println(e);
+        }
+    }
+    
+    public void showAllProduct() {
+        mode = "all";
+        getSizeProduct();
+        worker = new LoadWorker();
+        worker.execute();
     }
 
     /**
@@ -198,6 +518,7 @@ public class Home extends javax.swing.JFrame {
         jLabel5 = new javax.swing.JLabel();
         filterCategory = new javax.swing.JComboBox<>();
         jLabel6 = new javax.swing.JLabel();
+        progressBar = new javax.swing.JProgressBar();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setMinimumSize(new java.awt.Dimension(1180, 648));
@@ -237,11 +558,6 @@ public class Home extends javax.swing.JFrame {
         history.setContentAreaFilled(false);
         history.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         history.setOpaque(true);
-        history.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                historyMouseClicked(evt);
-            }
-        });
         history.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 historyActionPerformed(evt);
@@ -264,6 +580,7 @@ public class Home extends javax.swing.JFrame {
         showAll.setBackground(new java.awt.Color(0, 153, 255));
         showAll.setForeground(new java.awt.Color(0, 0, 0));
         showAll.setText("Tampilkan Semua");
+        showAll.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         showAll.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 showAllActionPerformed(evt);
@@ -276,7 +593,8 @@ public class Home extends javax.swing.JFrame {
 
         refresh.setBackground(new java.awt.Color(255, 102, 0));
         refresh.setForeground(new java.awt.Color(0, 0, 0));
-        refresh.setText("Refresh");
+        refresh.setText("Refresh Cart");
+        refresh.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         refresh.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 refreshActionPerformed(evt);
@@ -286,6 +604,7 @@ public class Home extends javax.swing.JFrame {
         openCart.setBackground(new java.awt.Color(255, 255, 255));
         openCart.setForeground(new java.awt.Color(0, 0, 0));
         openCart.setText("OPEN CART");
+        openCart.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         openCart.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 openCartActionPerformed(evt);
@@ -303,10 +622,10 @@ public class Home extends javax.swing.JFrame {
                 .addGroup(headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(userWelcome)
                     .addComponent(jLabel1))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 453, Short.MAX_VALUE)
-                .addComponent(refresh)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 427, Short.MAX_VALUE)
                 .addComponent(showAll)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(refresh)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 22, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -341,12 +660,13 @@ public class Home extends javax.swing.JFrame {
                                     .addComponent(logo)))))
                     .addGroup(headerPanelLayout.createSequentialGroup()
                         .addGap(23, 23, 23)
-                        .addGroup(headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                            .addComponent(showAll)
-                            .addComponent(cart, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(jLabel3, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
-                            .addComponent(refresh)
-                            .addComponent(openCart))))
+                        .addGroup(headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel3, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.PREFERRED_SIZE, 26, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addGroup(headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                                .addComponent(showAll)
+                                .addComponent(cart, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(refresh)
+                                .addComponent(openCart)))))
                 .addContainerGap(15, Short.MAX_VALUE))
         );
 
@@ -374,11 +694,6 @@ public class Home extends javax.swing.JFrame {
         cariProduct.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
         cariProduct.setForeground(new java.awt.Color(0, 0, 0));
         cariProduct.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(240, 240, 240)));
-        cariProduct.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                cariProductActionPerformed(evt);
-            }
-        });
 
         submitCariProduct.setBackground(new java.awt.Color(0, 0, 0));
         submitCariProduct.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
@@ -474,8 +789,10 @@ public class Home extends javax.swing.JFrame {
                 .addComponent(jLabel6)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(filterCategory, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addContainerGap(272, Short.MAX_VALUE))
         );
+
+        progressBar.setValue(0);
 
         javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
         mainPanel.setLayout(mainPanelLayout);
@@ -485,7 +802,11 @@ public class Home extends javax.swing.JFrame {
             .addGroup(mainPanelLayout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addGroup(mainPanelLayout.createSequentialGroup()
+                        .addComponent(progressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addContainerGap())))
         );
         mainPanelLayout.setVerticalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -493,7 +814,10 @@ public class Home extends javax.swing.JFrame {
                 .addComponent(headerPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, 567, Short.MAX_VALUE)
+                    .addGroup(mainPanelLayout.createSequentialGroup()
+                        .addComponent(progressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                     .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
 
@@ -526,7 +850,7 @@ public class Home extends javax.swing.JFrame {
     private void logout1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_logout1ActionPerformed
         int dialogButton = JOptionPane.YES_NO_OPTION;
         int dialogResult = JOptionPane.showConfirmDialog(null, "Yakin ingin keluar akun?", "Warning", dialogButton);
-        if(dialogResult == JOptionPane.YES_OPTION){
+        if(dialogResult == JOptionPane.YES_OPTION) {
             this.setVisible(false);
             Login login = new Login();
             Product productui = new Product();
@@ -543,80 +867,14 @@ public class Home extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_logout1ActionPerformed
 
-    private void cariProductActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cariProductActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_cariProductActionPerformed
-
     private void submitCariProductActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitCariProductActionPerformed
-        showAll.setVisible(true);
-        try {
-            sql = "SELECT * FROM products WHERE name LIKE ?";
-            ps = con.prepareStatement(sql);
-            ps.setString(1, '%' + cariProduct.getText() + '%');
-            rs = ps.executeQuery();
-            Home home = new Home();
-            
-            Component[] componentList = subContentPanel.getComponents();
-            for(Component c : componentList) {
-                if(c instanceof JLabel) {
-                    subContentPanel.remove(c);
-                }
-            }
-            subContentPanel.revalidate();
-            subContentPanel.repaint();
-            
-            while(rs.next()) {
-                URL url = new URL("http://localhost/nikeshop/src/assets/img/" + rs.getString("image"));
-                Image image = ImageIO.read(url);
-                
-                JLabel l = new JLabel(new ImageIcon(new ImageIcon(image).getImage().getScaledInstance(200, 200, Image.SCALE_DEFAULT)));
-                l.setText("<html>" + rs.getString("name") + "<br>Rp. " + rs.getString("price") + "</html>");
-                l.setVerticalTextPosition(JLabel.BOTTOM);
-                l.setHorizontalTextPosition(JLabel.CENTER);
-                l.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                l.setBorder(BorderFactory.createEmptyBorder(3, 2, 3, 2));
-                
-                String id = rs.getString("id_product");
-                String name = rs.getString("name");
-                String apparel = rs.getString("apparel");
-                String model = rs.getString("model");
-                String category = rs.getString("category");
-                String img = rs.getString("image");
-                String price = rs.getString("price");
-                String stock = rs.getString("stock");
-                
-                l.addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-                        try {
-                            Product productUI = new Product();
-                            home.setVisible(false);
-                            productUI.setVisible(true);
-                            productUI.getProductSelected(Integer.parseInt(id), name, apparel, model, category, img, price, stock, username_login);
-                        } catch (IOException ex) {
-//                            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                    
-                    @Override
-                    public void mouseEntered(MouseEvent e) {
-                        l.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 2));
-                    }
-                    
-                    @Override
-                    public void mouseExited(MouseEvent e) {
-                        l.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255,255,255), 2));
-                    }
-                });
-                
-                subContentPanel.add(l);
-            }
-        } catch(SQLException e) {
-            JOptionPane.showMessageDialog(null, e);
-        } catch (MalformedURLException ex) {
-//            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-//            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+        if(!cariProduct.getText().equals("")) {
+            listProduct.clear();
+            showAll.setVisible(true);
+            mode = "search";
+            getSizeProduct();
+            worker = new LoadWorker();
+            worker.execute();
         }
     }//GEN-LAST:event_submitCariProductActionPerformed
 
@@ -625,23 +883,10 @@ public class Home extends javax.swing.JFrame {
         filterModel.setSelectedIndex(0);
         filterCategory.setSelectedIndex(0);
         
-        Component[] componentList = subContentPanel.getComponents();
-         for(Component c : componentList) {
-            if(c instanceof JLabel) {
-               subContentPanel.remove(c);
-            }
-        }
-        
-        subContentPanel.revalidate();
-        subContentPanel.repaint();
         cariProduct.setText("");
         showAllProduct();
         showAll.setVisible(false);
     }//GEN-LAST:event_showAllActionPerformed
-
-    private void historyMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_historyMouseClicked
-        // TODO add your handling code here:
-    }//GEN-LAST:event_historyMouseClicked
 
     private void refreshActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_refreshActionPerformed
         cart.removeAllItems();
@@ -653,344 +898,47 @@ public class Home extends javax.swing.JFrame {
         try {
             cartUI.listCart(username_login);
         } catch (IOException ex) {
-//            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println(ex);
         }
     }//GEN-LAST:event_openCartActionPerformed
 
     private void filterModelItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_filterModelItemStateChanged
         showAll.setVisible(true);
         if(evt.getStateChange() == ItemEvent.SELECTED) {
+            listProduct.clear();
             String item = (String) evt.getItem();
+            itemModel = item;
             
-            try {
-                sql = "SELECT * FROM products" + 
-                        (cariProduct.getText().equals("") && filterApparel.getSelectedItem().equals("Semua") && item.equals("Semua") && filterCategory.getSelectedItem().equals("Semua")
-                            ? ""
-                            : " WHERE") +
-                        (cariProduct.getText().equals("") 
-                            ? filterApparel.getSelectedItem().equals("Semua") 
-                                ? item.equals("Semua")
-                                    ? ""
-                                    : filterApparel.getSelectedItem().equals("Semua")
-                                        ? ""
-                                        : " apparel = '" + filterApparel.getSelectedItem() + "'"
-                                : " apparel = '" + filterApparel.getSelectedItem() + "'" 
-                            : filterApparel.getSelectedItem().equals("Semua")
-                                ? " name LIKE '%" + cariProduct.getText() + "%'"
-                                : " name LIKE '%" + cariProduct.getText() + "%' AND apparel = '" + filterApparel.getSelectedItem() + "'") +
-                        (cariProduct.getText().equals("")
-                            ? filterApparel.getSelectedItem().equals("Semua")
-                                ? item.equals("Semua")
-                                    ? ""
-                                    : " model = '" + item + "'"
-                                : item.equals("Semua")
-                                    ? ""
-                                    : " AND model = '" + item + "'"
-                            : item.equals("Semua")
-                                ? ""
-                                : " AND model = '" + filterModel.getSelectedItem() + "'") +
-                        (cariProduct.getText().equals("")
-                            ? filterApparel.getSelectedItem().equals("Semua")
-                                ? item.equals("Semua")
-                                    ? filterCategory.getSelectedItem().equals("Semua")
-                                        ? ""
-                                        : " category = '" + filterCategory.getSelectedItem() + "'"
-                                    : filterCategory.getSelectedItem().equals("Semua")
-                                        ? ""
-                                        : " AND category = '" + filterCategory.getSelectedItem() + "'"
-                                : filterCategory.getSelectedItem().equals("Semua")
-                                    ? ""
-                                    : " AND category = '" + filterCategory.getSelectedItem() + "'"
-                            : filterCategory.getSelectedItem().equals("Semua")
-                                ? ""
-                                : " AND category = '" + filterCategory.getSelectedItem() + "'");
-
-                stat = con.createStatement();
-                rs = stat.executeQuery(sql);
-                Home home = new Home();
-            
-                Component[] componentList = subContentPanel.getComponents();
-                for(Component c : componentList) {
-                    if(c instanceof JLabel) {
-                        subContentPanel.remove(c);
-                    }
-                }
-                subContentPanel.revalidate();
-                subContentPanel.repaint();
-
-                while(rs.next()) {
-                    URL url = new URL("http://localhost/nikeshop/src/assets/img/" + rs.getString("image"));
-                    Image image = ImageIO.read(url);
-
-                    JLabel l = new JLabel(new ImageIcon(new ImageIcon(image).getImage().getScaledInstance(200, 200, Image.SCALE_DEFAULT)));
-                    l.setText("<html>" + rs.getString("name") + "<br>Rp. " + rs.getString("price") + "</html>");
-                    l.setVerticalTextPosition(JLabel.BOTTOM);
-                    l.setHorizontalTextPosition(JLabel.CENTER);
-                    l.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                    l.setBorder(BorderFactory.createEmptyBorder(3, 2, 3, 2));
-
-                    String id = rs.getString("id_product");
-                    String name = rs.getString("name");
-                    String apparel = rs.getString("apparel");
-                    String model = rs.getString("model");
-                    String category = rs.getString("category");
-                    String img = rs.getString("image");
-                    String price = rs.getString("price");
-                    String stock = rs.getString("stock");
-
-                    l.addMouseListener(new MouseAdapter() {
-                        @Override
-                        public void mouseClicked(MouseEvent e) {
-                            try {
-                                Product productUI = new Product();
-                                home.setVisible(false);
-                                productUI.setVisible(true);
-                                productUI.getProductSelected(Integer.parseInt(id), name, apparel, model, category, img, price, stock, username_login);
-                            } catch (IOException ex) {
-    //                            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
-
-                        @Override
-                        public void mouseEntered(MouseEvent e) {
-                            l.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 2));
-                        }
-
-                        @Override
-                        public void mouseExited(MouseEvent e) {
-                            l.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255,255,255), 2));
-                        }
-                    });
-
-                    subContentPanel.add(l);
-                }
-            } catch (SQLException | IOException ex) {
-                JOptionPane.showMessageDialog(null, ex);
-            }
+            getSizeProduct();
+            worker = new LoadWorker();
+            worker.execute();
         }
     }//GEN-LAST:event_filterModelItemStateChanged
 
     private void filterApparelItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_filterApparelItemStateChanged
         showAll.setVisible(true);
         if(evt.getStateChange() == ItemEvent.SELECTED) {
+            listProduct.clear();
+            mode = "apparel";
             String item = (String) evt.getItem();
+            itemApparel = item;
             
-            try {
-                sql = "SELECT * FROM products" + 
-                        (cariProduct.getText().equals("") && item.equals("Semua") && filterModel.getSelectedItem().equals("Semua") && filterCategory.getSelectedItem().equals("Semua")
-                            ? ""
-                            : " WHERE") +
-                        (cariProduct.getText().equals("") 
-                            ? item.equals("Semua") 
-                                ? filterModel.getSelectedItem().equals("Semua")
-                                    ? ""
-                                    : item.equals("Semua")
-                                        ? ""
-                                        : " apparel = '" + item + "'"
-                                : " apparel = '" + item + "'" 
-                            : item.equals("Semua")
-                                ? " name LIKE '%" + cariProduct.getText() + "%'"
-                                : " name LIKE '%" + cariProduct.getText() + "%' AND apparel = '" + item + "'") +
-                        (cariProduct.getText().equals("")
-                            ? item.equals("Semua")
-                                ? filterModel.getSelectedItem().equals("Semua")
-                                    ? ""
-                                    : " model = '" + filterModel.getSelectedItem() + "'"
-                                : filterModel.getSelectedItem().equals("Semua")
-                                    ? ""
-                                    : " AND model = '" + filterModel.getSelectedItem() + "'"
-                            : filterModel.getSelectedItem().equals("Semua")
-                                ? ""
-                                : " AND model = '" + filterModel.getSelectedItem() + "'") +
-                        (cariProduct.getText().equals("")
-                            ? item.equals("Semua")
-                                ? filterModel.getSelectedItem().equals("Semua")
-                                    ? filterCategory.getSelectedItem().equals("Semua")
-                                        ? ""
-                                        : filterCategory.getSelectedItem().equals("Semua")
-                                            ? ""
-                                            : " AND category = '" + filterCategory.getSelectedItem() + "'"
-                                    : " AND category = '" + filterCategory.getSelectedItem() + "'"
-                                : filterCategory.getSelectedItem().equals("Semua")
-                                    ? ""
-                                    : " AND category = '" + filterCategory.getSelectedItem() + "'"
-                            : filterCategory.getSelectedItem().equals("Semua")
-                                ? ""
-                                : " AND category = '" + filterCategory.getSelectedItem() + "'");
-                
-                stat = con.createStatement();
-                rs = stat.executeQuery(sql);
-                Home home = new Home();
-            
-                Component[] componentList = subContentPanel.getComponents();
-                for(Component c : componentList) {
-                    if(c instanceof JLabel) {
-                        subContentPanel.remove(c);
-                    }
-                }
-                subContentPanel.revalidate();
-                subContentPanel.repaint();
-
-                while(rs.next()) {
-                    URL url = new URL("http://localhost/nikeshop/src/assets/img/" + rs.getString("image"));
-                    Image image = ImageIO.read(url);
-
-                    JLabel l = new JLabel(new ImageIcon(new ImageIcon(image).getImage().getScaledInstance(200, 200, Image.SCALE_DEFAULT)));
-                    l.setText("<html>" + rs.getString("name") + "<br>Rp. " + rs.getString("price") + "</html>");
-                    l.setVerticalTextPosition(JLabel.BOTTOM);
-                    l.setHorizontalTextPosition(JLabel.CENTER);
-                    l.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                    l.setBorder(BorderFactory.createEmptyBorder(3, 2, 3, 2));
-
-                    String id = rs.getString("id_product");
-                    String name = rs.getString("name");
-                    String apparel = rs.getString("apparel");
-                    String model = rs.getString("model");
-                    String category = rs.getString("category");
-                    String img = rs.getString("image");
-                    String price = rs.getString("price");
-                    String stock = rs.getString("stock");
-
-                    l.addMouseListener(new MouseAdapter() {
-                        @Override
-                        public void mouseClicked(MouseEvent e) {
-                            try {
-                                Product productUI = new Product();
-                                home.setVisible(false);
-                                productUI.setVisible(true);
-                                productUI.getProductSelected(Integer.parseInt(id), name, apparel, model, category, img, price, stock, username_login);
-                            } catch (IOException ex) {
-    //                            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
-
-                        @Override
-                        public void mouseEntered(MouseEvent e) {
-                            l.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 2));
-                        }
-
-                        @Override
-                        public void mouseExited(MouseEvent e) {
-                            l.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255,255,255), 2));
-                        }
-                    });
-
-                    subContentPanel.add(l);
-                }
-            } catch (SQLException | IOException ex) {
-                JOptionPane.showMessageDialog(null, ex);
-            }
+            getSizeProduct();
+            worker = new LoadWorker();
+            worker.execute();
         }
     }//GEN-LAST:event_filterApparelItemStateChanged
 
     private void filterCategoryItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_filterCategoryItemStateChanged
         showAll.setVisible(true);
         if(evt.getStateChange() == ItemEvent.SELECTED) {
+            listProduct.clear();
             String item = (String) evt.getItem();
+            itemCategory = item;
             
-            try {
-                sql = "SELECT * FROM products" + 
-                        (cariProduct.getText().equals("") && filterApparel.getSelectedItem().equals("Semua") && filterModel.getSelectedItem().equals("Semua") && item.equals("Semua")
-                            ? ""
-                            : " WHERE") +
-                        (cariProduct.getText().equals("") 
-                            ? filterApparel.getSelectedItem().equals("Semua") 
-                                ? filterModel.getSelectedItem().equals("Semua")
-                                    ? ""
-                                    : filterApparel.getSelectedItem().equals("Semua")
-                                        ? ""
-                                        : " apparel = '" + filterApparel.getSelectedItem() + "'"
-                                : " apparel = '" + filterApparel.getSelectedItem() + "'" 
-                            : filterApparel.getSelectedItem().equals("Semua")
-                                ? " name LIKE '%" + cariProduct.getText() + "%'"
-                                : " name LIKE '%" + cariProduct.getText() + "%' AND apparel = '" + filterApparel.getSelectedItem() + "'") +
-                        (cariProduct.getText().equals("")
-                            ? filterApparel.getSelectedItem().equals("Semua")
-                                ? filterModel.getSelectedItem().equals("Semua")
-                                    ? ""
-                                    : " model = '" + filterModel.getSelectedItem() + "'"
-                                : filterModel.getSelectedItem().equals("Semua")
-                                    ? ""
-                                    : " AND model = '" + filterModel.getSelectedItem() + "'"
-                            : filterModel.getSelectedItem().equals("Semua")
-                                ? ""
-                                : " AND model = '" + filterModel.getSelectedItem() + "'") +
-                        (cariProduct.getText().equals("")
-                            ? filterApparel.getSelectedItem().equals("Semua")
-                                ? filterModel.getSelectedItem().equals("Semua")
-                                    ? item.equals("Semua")
-                                        ? ""
-                                        : " category = '" + item + "'"
-                                    : " AND category = '" + item + "'"
-                                : item.equals("Semua")
-                                    ? ""
-                                    : " AND category = '" + item + "'"
-                            : item.equals("Semua")
-                                ? ""
-                                : " AND category = '" + item + "'");
-                
-                stat = con.createStatement();
-                rs = stat.executeQuery(sql);
-                Home home = new Home();
-            
-                Component[] componentList = subContentPanel.getComponents();
-                for(Component c : componentList) {
-                    if(c instanceof JLabel) {
-                        subContentPanel.remove(c);
-                    }
-                }
-                subContentPanel.revalidate();
-                subContentPanel.repaint();
-
-                while(rs.next()) {
-                    URL url = new URL("http://localhost/nikeshop/src/assets/img/" + rs.getString("image"));
-                    Image image = ImageIO.read(url);
-
-                    JLabel l = new JLabel(new ImageIcon(new ImageIcon(image).getImage().getScaledInstance(200, 200, Image.SCALE_DEFAULT)));
-                    l.setText("<html>" + rs.getString("name") + "<br>Rp. " + rs.getString("price") + "</html>");
-                    l.setVerticalTextPosition(JLabel.BOTTOM);
-                    l.setHorizontalTextPosition(JLabel.CENTER);
-                    l.setCursor(new Cursor(Cursor.HAND_CURSOR));
-                    l.setBorder(BorderFactory.createEmptyBorder(3, 2, 3, 2));
-
-                    String id = rs.getString("id_product");
-                    String name = rs.getString("name");
-                    String apparel = rs.getString("apparel");
-                    String model = rs.getString("model");
-                    String category = rs.getString("category");
-                    String img = rs.getString("image");
-                    String price = rs.getString("price");
-                    String stock = rs.getString("stock");
-
-                    l.addMouseListener(new MouseAdapter() {
-                        @Override
-                        public void mouseClicked(MouseEvent e) {
-                            try {
-                                Product productUI = new Product();
-                                home.setVisible(false);
-                                productUI.setVisible(true);
-                                productUI.getProductSelected(Integer.parseInt(id), name, apparel, model, category, img, price, stock, username_login);
-                            } catch (IOException ex) {
-    //                            Logger.getLogger(Home.class.getName()).log(Level.SEVERE, null, ex);
-                            }
-                        }
-
-                        @Override
-                        public void mouseEntered(MouseEvent e) {
-                            l.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0), 2));
-                        }
-
-                        @Override
-                        public void mouseExited(MouseEvent e) {
-                            l.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255,255,255), 2));
-                        }
-                    });
-
-                    subContentPanel.add(l);
-                }
-            } catch (SQLException | IOException ex) {
-                JOptionPane.showMessageDialog(null, ex);
-            }
+            getSizeProduct();
+            worker = new LoadWorker();
+            worker.execute();
         }
     }//GEN-LAST:event_filterCategoryItemStateChanged
 
@@ -1048,6 +996,7 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JButton logout1;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JButton openCart;
+    private javax.swing.JProgressBar progressBar;
     private javax.swing.JButton refresh;
     private javax.swing.JButton showAll;
     private javax.swing.JPanel subContentPanel;
