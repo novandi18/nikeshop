@@ -7,3 +7,8 @@ Aplikasi jual beli sepatu Nike serta pengelolaan Admin. Aplikasi ini juga bertuj
 ## Libraries
 1. [JFreeChart](https://www.jfree.org/jfreechart/download.html)
 2. [Apache POI](https://github.com/apache/poi)
+3. [MYSQL JDBC](https://dev.mysql.com/downloads/connector/j/)
+
+## Admin
+- Username  : admingateng
+- Password  : admin123
