@@ -112,13 +112,22 @@ public class Home extends javax.swing.JFrame {
         }
     }
     
+    private void showLoading() {
+        ImageIcon icon = new ImageIcon(this.getClass().getResource("../assets/loading-u.gif"));
+        Image img = icon.getImage();
+        Image imgScale = img.getScaledInstance(30, 30, Image.SCALE_DEFAULT);
+        icon = new ImageIcon(imgScale);
+        loading.setIcon(icon);
+    }
+    
     private class LoadWorker extends SwingWorker<Boolean, Void> {
         @Override
         protected void done() {
             try {
                 if (get() != null) {
-                    progressBar.setVisible(false);
                     listProduct.clear();
+                    loading.setIcon(null);
+                    loading.revalidate();
                 }
             } catch (InterruptedException | ExecutionException ex) {
                 System.out.println(ex);
@@ -127,8 +136,8 @@ public class Home extends javax.swing.JFrame {
 
         @Override
         protected Boolean doInBackground() throws SQLException, InterruptedException, MalformedURLException, IOException {
-            progressBar.setVisible(true);
-
+            showLoading();
+            
             Component[] componentList = subContentPanel.getComponents();
             for(Component c : componentList) {
                 if(c instanceof JLabel) {
@@ -140,17 +149,14 @@ public class Home extends javax.swing.JFrame {
             subContentPanel.repaint();
 
             Home home = new Home();
-            int idx = 0;
-            int size = listProduct.size();
-            int persen = 0;
             
             if(mode.equals("all")) {
-                sql = "SELECT * FROM products";
+                sql = "SELECT * FROM products WHERE stock > 0";
             } else if(mode.equals("apparel")) {
                 sql = "SELECT * FROM products" + 
                         (cariProduct.getText().equals("") && itemApparel.equals("Semua") && filterModel.getSelectedItem().equals("Semua") && filterCategory.getSelectedItem().equals("Semua")
-                            ? ""
-                            : " WHERE") +
+                            ? " WHERE stock > 0"
+                            : " WHERE stock > 0 AND") +
                         (cariProduct.getText().equals("") 
                             ? itemApparel.equals("Semua") 
                                 ? filterModel.getSelectedItem().equals("Semua")
@@ -181,7 +187,7 @@ public class Home extends javax.swing.JFrame {
                                         : filterCategory.getSelectedItem().equals("Semua")
                                             ? ""
                                             : " AND category = '" + filterCategory.getSelectedItem() + "'"
-                                    : " AND category = '" + filterCategory.getSelectedItem() + "'"
+                                    : ""
                                 : filterCategory.getSelectedItem().equals("Semua")
                                     ? ""
                                     : " AND category = '" + filterCategory.getSelectedItem() + "'"
@@ -191,8 +197,8 @@ public class Home extends javax.swing.JFrame {
             } else if(mode.equals("model")) {
                 sql = "SELECT * FROM products" + 
                         (cariProduct.getText().equals("") && filterApparel.getSelectedItem().equals("Semua") && itemModel.equals("Semua") && filterCategory.getSelectedItem().equals("Semua")
-                            ? ""
-                            : " WHERE") +
+                            ? " WHERE stock > 0"
+                            : " WHERE stock > 0 AND") +
                         (cariProduct.getText().equals("") 
                             ? filterApparel.getSelectedItem().equals("Semua") 
                                 ? itemModel.equals("Semua")
@@ -233,8 +239,8 @@ public class Home extends javax.swing.JFrame {
             } else if(mode.equals("category")) {
                 sql = "SELECT * FROM products" + 
                         (cariProduct.getText().equals("") && filterApparel.getSelectedItem().equals("Semua") && filterModel.getSelectedItem().equals("Semua") && itemCategory.equals("Semua")
-                            ? ""
-                            : " WHERE") +
+                            ? " WHERE stock > 0"
+                            : " WHERE stock > 0 AND") +
                         (cariProduct.getText().equals("") 
                             ? filterApparel.getSelectedItem().equals("Semua") 
                                 ? filterModel.getSelectedItem().equals("Semua")
@@ -263,7 +269,7 @@ public class Home extends javax.swing.JFrame {
                                     ? itemCategory.equals("Semua")
                                         ? ""
                                         : " category = '" + itemCategory + "'"
-                                    : " AND category = '" + itemCategory + "'"
+                                    : ""
                                 : itemCategory.equals("Semua")
                                     ? ""
                                     : " AND category = '" + itemCategory + "'"
@@ -271,15 +277,13 @@ public class Home extends javax.swing.JFrame {
                                 ? ""
                                 : " AND category = '" + itemCategory + "'");
             } else if(mode.equals("search")) {
-                sql = "SELECT * FROM products WHERE name LIKE ?";
+                sql = "SELECT * FROM products WHERE name LIKE ? AND stock > 0";
             }
             
             ps = con.prepareStatement(sql);
             if(mode.equals("search")) ps.setString(1, '%' + cariProduct.getText() + '%');
             rs = ps.executeQuery();
             while (rs.next()) {
-                persen = (idx * 100) / size;
-                
                 URL url = new URL("http://localhost/nikeshop/src/assets/img/" + rs.getString("image"));
                 Image image = ImageIO.read(url);
                 
@@ -324,9 +328,8 @@ public class Home extends javax.swing.JFrame {
                 });
                 
                 subContentPanel.add(l);
-                progressBar.setValue(persen);
-                idx++;
             }
+            
             ps.close();
             Thread.sleep(1000);
             return true;
@@ -505,6 +508,7 @@ public class Home extends javax.swing.JFrame {
         jLabel3 = new javax.swing.JLabel();
         refresh = new javax.swing.JButton();
         openCart = new javax.swing.JButton();
+        loading = new javax.swing.JLabel();
         contentPanel = new javax.swing.JScrollPane();
         subContentPanel = new javax.swing.JPanel();
         jPanel1 = new javax.swing.JPanel();
@@ -518,10 +522,10 @@ public class Home extends javax.swing.JFrame {
         jLabel5 = new javax.swing.JLabel();
         filterCategory = new javax.swing.JComboBox<>();
         jLabel6 = new javax.swing.JLabel();
-        progressBar = new javax.swing.JProgressBar();
+        jLabel7 = new javax.swing.JLabel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setMinimumSize(new java.awt.Dimension(1180, 648));
+        setMinimumSize(new java.awt.Dimension(1190, 642));
 
         mainPanel.setBackground(new java.awt.Color(255, 255, 255));
         mainPanel.setForeground(new java.awt.Color(255, 255, 255));
@@ -611,6 +615,8 @@ public class Home extends javax.swing.JFrame {
             }
         });
 
+        loading.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+
         javax.swing.GroupLayout headerPanelLayout = new javax.swing.GroupLayout(headerPanel);
         headerPanel.setLayout(headerPanelLayout);
         headerPanelLayout.setHorizontalGroup(
@@ -622,7 +628,9 @@ public class Home extends javax.swing.JFrame {
                 .addGroup(headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(userWelcome)
                     .addComponent(jLabel1))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 427, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 369, Short.MAX_VALUE)
+                .addComponent(loading, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(18, 18, 18)
                 .addComponent(showAll)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addComponent(refresh)
@@ -657,7 +665,8 @@ public class Home extends javax.swing.JFrame {
                                     .addComponent(userWelcome))
                                 .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, headerPanelLayout.createSequentialGroup()
                                     .addGap(3, 3, 3)
-                                    .addComponent(logo)))))
+                                    .addComponent(logo))
+                                .addComponent(loading, javax.swing.GroupLayout.PREFERRED_SIZE, 45, javax.swing.GroupLayout.PREFERRED_SIZE))))
                     .addGroup(headerPanelLayout.createSequentialGroup()
                         .addGap(23, 23, 23)
                         .addGroup(headerPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -742,28 +751,37 @@ public class Home extends javax.swing.JFrame {
         jLabel6.setForeground(new java.awt.Color(0, 0, 0));
         jLabel6.setText("Kategori");
 
+        jLabel7.setForeground(new java.awt.Color(153, 153, 153));
+        jLabel7.setText("Made by RiNov with ❤️");
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addGap(22, 22, 22)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(filterModel, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel6, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(cariProduct, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(submitCariProduct, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(filterApparel, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(filterCategory, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(22, 22, 22)
                         .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addComponent(jLabel2)
-                            .addComponent(jLabel4))
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addGap(18, 18, 18)
+                            .addComponent(filterModel, javax.swing.GroupLayout.Alignment.TRAILING, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel6, javax.swing.GroupLayout.Alignment.TRAILING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addComponent(cariProduct, javax.swing.GroupLayout.DEFAULT_SIZE, 189, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(submitCariProduct, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(filterApparel, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(filterCategory, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(jLabel5, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addGroup(jPanel1Layout.createSequentialGroup()
+                                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jLabel2)
+                                    .addComponent(jLabel4))
+                                .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(18, 18, 18))
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGap(14, 14, 14)
+                        .addComponent(jLabel7)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
                 .addComponent(jSeparator1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -789,10 +807,10 @@ public class Home extends javax.swing.JFrame {
                 .addComponent(jLabel6)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(filterCategory, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(272, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 239, Short.MAX_VALUE)
+                .addComponent(jLabel7, javax.swing.GroupLayout.PREFERRED_SIZE, 27, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap())
         );
-
-        progressBar.setValue(0);
 
         javax.swing.GroupLayout mainPanelLayout = new javax.swing.GroupLayout(mainPanel);
         mainPanel.setLayout(mainPanelLayout);
@@ -802,11 +820,7 @@ public class Home extends javax.swing.JFrame {
             .addGroup(mainPanelLayout.createSequentialGroup()
                 .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addGroup(mainPanelLayout.createSequentialGroup()
-                        .addComponent(progressBar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addContainerGap())))
+                .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         mainPanelLayout.setVerticalGroup(
             mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -814,11 +828,8 @@ public class Home extends javax.swing.JFrame {
                 .addComponent(headerPanel, javax.swing.GroupLayout.PREFERRED_SIZE, 75, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(mainPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(mainPanelLayout.createSequentialGroup()
-                        .addComponent(progressBar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(contentPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -903,11 +914,18 @@ public class Home extends javax.swing.JFrame {
     }//GEN-LAST:event_openCartActionPerformed
 
     private void filterModelItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_filterModelItemStateChanged
-        showAll.setVisible(true);
         if(evt.getStateChange() == ItemEvent.SELECTED) {
-            listProduct.clear();
             String item = (String) evt.getItem();
             itemModel = item;
+            
+            if((item.equals("Semua") && filterApparel.equals("Semua")) && (filterCategory.equals("Semua") && cariProduct.getText().equals(""))) {
+                showAll.setVisible(false);
+            } else {
+                showAll.setVisible(true);
+            }
+            
+            listProduct.clear();
+            mode = "model";
             
             getSizeProduct();
             worker = new LoadWorker();
@@ -916,12 +934,18 @@ public class Home extends javax.swing.JFrame {
     }//GEN-LAST:event_filterModelItemStateChanged
 
     private void filterApparelItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_filterApparelItemStateChanged
-        showAll.setVisible(true);
         if(evt.getStateChange() == ItemEvent.SELECTED) {
-            listProduct.clear();
-            mode = "apparel";
             String item = (String) evt.getItem();
             itemApparel = item;
+            
+            if((item.equals("Semua") && filterModel.getSelectedItem().equals("Semua")) && (filterCategory.getSelectedItem().equals("Semua") && cariProduct.getText().equals(""))) {
+                showAll.setVisible(false);
+            } else {
+                showAll.setVisible(true);
+            }
+            
+            listProduct.clear();
+            mode = "apparel";
             
             getSizeProduct();
             worker = new LoadWorker();
@@ -930,11 +954,18 @@ public class Home extends javax.swing.JFrame {
     }//GEN-LAST:event_filterApparelItemStateChanged
 
     private void filterCategoryItemStateChanged(java.awt.event.ItemEvent evt) {//GEN-FIRST:event_filterCategoryItemStateChanged
-        showAll.setVisible(true);
         if(evt.getStateChange() == ItemEvent.SELECTED) {
-            listProduct.clear();
             String item = (String) evt.getItem();
             itemCategory = item;
+            
+            if((item.equals("Semua") && filterModel.getSelectedItem().equals("Semua")) && (filterApparel.getSelectedItem().equals("Semua") && cariProduct.getText().equals(""))) {
+                showAll.setVisible(false);
+            } else {
+                showAll.setVisible(true);
+            }
+            
+            listProduct.clear();
+            mode = "category";
             
             getSizeProduct();
             worker = new LoadWorker();
@@ -990,13 +1021,14 @@ public class Home extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel4;
     private javax.swing.JLabel jLabel5;
     private javax.swing.JLabel jLabel6;
+    private javax.swing.JLabel jLabel7;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JSeparator jSeparator1;
+    private javax.swing.JLabel loading;
     private javax.swing.JLabel logo;
     private javax.swing.JButton logout1;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JButton openCart;
-    private javax.swing.JProgressBar progressBar;
     private javax.swing.JButton refresh;
     private javax.swing.JButton showAll;
     private javax.swing.JPanel subContentPanel;

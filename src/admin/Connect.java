@@ -11,8 +11,8 @@ import java.sql.Statement;
 import javax.swing.JOptionPane;
 
 public class Connect {
-    Connection conn;
-    Statement stm;
+    public Connection conn;
+    public Statement stm;
     
     public void connect() {
         try {
