@@ -33,8 +33,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.ExecutionException;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.imageio.ImageIO;
@@ -46,6 +45,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.SwingWorker;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -67,15 +67,30 @@ import org.jfree.data.general.PieDataset;
  * @author Novandi Ramadhan
  */
 public class Dashboard extends javax.swing.JFrame {
+    List<String> listData = new ArrayList<>();
     int pageSelected = 1;
     Connection con;
     Statement stat;
     PreparedStatement ps;
     ResultSet rs;
-    String sql, dataClicked, editFormMode, imageChoose, filePath, userLogin;
+    String sql, dataClicked, editFormMode, imageChoose, filePath, userLogin, mode;
     List<String> listId = new ArrayList<>();
-    JTable tb = new JTable();
+    JTable uTb = new JTable();
+    JTable pTb = new JTable();
+    JTable aTb = new JTable();
+    JTable apTb = new JTable();
+    JTable mTb = new JTable();
+    DefaultTableModel uModel = new DefaultTableModel();
+    DefaultTableModel pModel = new DefaultTableModel();
+    DefaultTableModel aModel = new DefaultTableModel();
+    DefaultTableModel apModel = new DefaultTableModel();
+    DefaultTableModel mModel = new DefaultTableModel();
     String tgl = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    private UsersWorker uWorker;
+    private ProductWorker pWorker;
+    private AdminWorker aWorker;
+    private ApparelWorker apWorker;
+    private ModelWorker mWorker;
     
     /**
      * Creates new form Dashboard
@@ -111,99 +126,513 @@ public class Dashboard extends javax.swing.JFrame {
         welcomeName.setText(username);
     }
     
-    private void showDataAdmin() {
-        this.setTitle("Data Admin");
-        exportExcel.setVisible(false);
-        searchField.setVisible(true);
-        searchBtn.setVisible(true);
-        deleteBtn.setText("DELETE ALL");
-        listId.clear();
-        showAll.setVisible(false);
-        exportExcel.setVisible(false);
+    private void showLoading() {
+        ImageIcon icon = new ImageIcon(this.getClass().getResource("../assets/loading.gif"));
+        Image img = icon.getImage();
+        Image imgScale = img.getScaledInstance(22, 22, Image.SCALE_DEFAULT);
+        icon = new ImageIcon(imgScale);
+        loading.setIcon(icon);
+    }
+    
+    private class UsersWorker extends SwingWorker<Boolean, List> {
+        @Override
+        protected void done() {
+            mode = "";
+            try {
+                if (get() != null) {
+                    loading.setIcon(null);
+                    loading.revalidate();
+                }
+            } catch (InterruptedException | ExecutionException ex) {
+                // nothing
+            }
+        }
         
-        JPanel tableBox = new JPanel();
-        tableBox.setBackground(Color.white);
-        tableBox.setLayout(new GridLayout(1, 0));
-        tb = new JTable();
-        DefaultTableModel table = new DefaultTableModel() {
-            @Override
-            public boolean isCellEditable(int row, int column) {
+        @Override
+        protected void process(List chunks) {
+            uModel.addRow(new Object[] {
+                listData.get(0),
+                listData.get(1),
+                listData.get(2),
+                listData.get(3)
+            });
+        }
+        
+        @Override
+        protected Boolean doInBackground() throws Exception {
+            showLoading();
+            
+            try {
+                if(mode.equals("all-users")) {
+                    sql = "SELECT u.id as id, u.username as user, p.name AS produk, mo.order_date as orderdate FROM users u "
+                            + "JOIN myorder mo ON u.username = mo.username JOIN products p ON mo.id_product = p.id_product "
+                            + "WHERE mo.order_date = ( SELECT MAX(order_date) FROM myorder WHERE username = u.username ) GROUP BY u.username "
+                            + "UNION SELECT u.id, u.username, ?, ? FROM users u WHERE u.username NOT IN (SELECT mo.username FROM myorder mo)";
+                } else if(mode.equals("search-users")) {
+                    sql = "SELECT u.id as id, u.username as user, p.name AS produk, mo.order_date as orderdate FROM users u "
+                            + "JOIN myorder mo ON u.username = mo.username JOIN products p ON mo.id_product = p.id_product "
+                            + "WHERE mo.order_date = ( SELECT MAX(order_date) FROM myorder WHERE username LIKE ? ) GROUP BY u.username "
+                            + "UNION SELECT u.id, u.username, ?, ? FROM users u WHERE u.username NOT IN (SELECT mo.username FROM myorder mo) "
+                            + "AND u.username LIKE ?";
+                }
+                ps = con.prepareStatement(sql);
+                if(mode.equals("search-users")) {
+                    ps.setString(1, "%" + searchField.getText() + "%");
+                    ps.setString(2, "Tidak ada produk");
+                    ps.setString(3, "Tidak ada tanggal pembelian");
+                    ps.setString(4, "%" + searchField.getText() + "%");
+                } else {
+                    ps.setString(1, "Tidak ada produk");
+                    ps.setString(2, "Tidak ada tanggal pembelian");
+                }
+                rs = ps.executeQuery();
+                while(rs.next()) {
+                    listData.add(rs.getString("id"));
+                    listData.add(rs.getString("user"));
+                    listData.add(rs.getString("produk"));
+                    listData.add(rs.getString("orderdate"));
+                    publish(listData);
+                    Thread.sleep(100);
+                    listData.clear();
+                }
+            } catch(SQLException e) {
                 return false;
             }
-        };
-        table.addColumn("#");
-        table.addColumn("Id");
-        table.addColumn("Username");
-        table.addColumn("Role");
-        try {
-            sql = "SELECT * FROM admin WHERE username != ?";
-            ps = con.prepareStatement(sql);
-            ps.setString(1, userLogin);
-            rs = ps.executeQuery();
-            while(rs.next()) {
-                table.addRow(new Object[] {
-                    "", rs.getString(1), rs.getString(2), rs.getString(4)
-                });
-            }
-            tb.setModel(table);
             
-            sql  = "SELECT role FROM admin WHERE username = ?";
-            ps = con.prepareStatement(sql);
-            ps.setString(1, userLogin);
-            rs = ps.executeQuery();
-            while(rs.next()) {
-                if(rs.getString("role").equals("super")) {
-                    insertBtn.setVisible(true);
-                    deleteBtn.setVisible(true);
-                    
-                    tb.addMouseListener(new java.awt.event.MouseAdapter() {
-                        @Override
-                        public void mouseClicked(java.awt.event.MouseEvent evt) {
-                            int row = tb.getSelectedRow();
-                            String check = tb.getModel().getValueAt(row, 0).toString();
-                            String rowData = tb.getModel().getValueAt(row, 2).toString();
-
-                            if(check.equals("")) {
-                                tb.setValueAt("Dipilih", row, 0);
-                                listId.add(rowData);
-                                deleteBtn.setText("DELETE (" + listId.size() + ")");
-                            } else {
-                                tb.setValueAt("", row, 0);
-                                listId.remove(rowData);
-                                if(listId.size() < 1) {
-                                    deleteBtn.setText("DELETE ALL");
-                                } else {
-                                    deleteBtn.setText("DELETE (" + listId.size() + ")");
-                                }
-                            }
-
-                            dataClicked = rowData;
-                            editFormMode = "update";
-                            alertPass.setVisible(true);
-                            insertBtn.setVisible(true);
-                            titleForm1.setForeground(new java.awt.Color(0, 153, 0));
-                            submitAdminForm.setBackground(new java.awt.Color(0, 153, 0));
-                            if(adminForm.isShowing()) {
-                                showEditAdmin(rowData);
-                                titleForm1.setText("Edit Admin");
-                                editBtn.setVisible(false);
-                            } else {
-                                editBtn.setVisible(true);
-                            }
-                        }
-                    });
-                } else {
-                    insertBtn.setVisible(false);
-                    editBtn.setVisible(false);
-                    deleteBtn.setVisible(false);
-                }
-            }
-        } catch(SQLException e) {
-            JOptionPane.showMessageDialog(null, e);
+            return true;
         }
-        JScrollPane scrollPane = new JScrollPane(tb);
-        tableBox.add(scrollPane);
-        contentPanel.add(tableBox);
+    }
+    
+    private class ProductWorker extends SwingWorker<Boolean, List> {
+        @Override
+        protected void done() {
+            mode = "";
+            try {
+                if (get() != null) {
+                    loading.setIcon(null);
+                    loading.revalidate();
+                }
+            } catch (InterruptedException | ExecutionException ex) {
+                // nothing
+            }
+        }
+        
+        @Override
+        protected void process(List chunks) {
+            pModel.addRow(new Object[] {
+                "",
+                listData.get(0),
+                listData.get(1),
+                listData.get(2),
+                listData.get(3),
+                listData.get(4),
+                listData.get(5),
+                listData.get(6),
+            });
+        }
+        
+        @Override
+        protected Boolean doInBackground() throws Exception {
+            showLoading();
+            
+            try {
+                if(mode.equals("all-product")) {
+                    sql = "SELECT * FROM products";
+                } else if(mode.equals("search-product")) {
+                    sql = "SELECT * FROM products WHERE name LIKE ? OR apparel LIKE ? OR model LIKE ?";
+                }
+                
+                ps = con.prepareStatement(sql);
+                if(mode.equals("search-product")) {
+                    ps.setString(1, "%" + searchField.getText() + "%");
+                    ps.setString(2, "%" + searchField.getText() + "%");
+                    ps.setString(3, "%" + searchField.getText() + "%");
+                }
+                
+                rs = ps.executeQuery();
+                while(rs.next()) {
+                    listData.add(rs.getString(1));
+                    listData.add(rs.getString(2));
+                    listData.add(rs.getString(3));
+                    listData.add(rs.getString(4));
+                    listData.add(rs.getString(5));
+                    listData.add(rs.getString(6));
+                    listData.add(rs.getString(8));
+                    publish(listData);
+                    Thread.sleep(100);
+                    listData.clear();
+                }
+            } catch(SQLException e) {
+                return false;
+            }
+            
+            pTb.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    int row = pTb.getSelectedRow();
+                    String check = pTb.getModel().getValueAt(row, 0).toString();
+                    String rowData = pTb.getModel().getValueAt(row, 1).toString();
+
+                    if(check.equals("")) {
+                        pTb.setValueAt("Dipilih", row, 0);
+                        listId.add(rowData);
+                        deleteBtn.setText("DELETE (" + listId.size() + ")");
+                    } else {
+                        pTb.setValueAt("", row, 0);
+                        listId.remove(rowData);
+                        if(listId.size() < 1) {
+                            deleteBtn.setText("DELETE ALL");
+                        } else {
+                            deleteBtn.setText("DELETE (" + listId.size() + ")");
+                        }
+                    }
+
+                    dataClicked = rowData;
+                    editFormMode = "update";
+                    insertBtn.setVisible(true);
+                    titleForm.setForeground(new java.awt.Color(0, 153, 0));
+                    submitProducts.setBackground(new java.awt.Color(0, 153, 0));
+                    if(editForm.isShowing()) {
+                        showEditProducts(rowData);
+                        titleForm.setText("Edit Product");
+                        editBtn.setVisible(false);
+                    } else {
+                        editBtn.setVisible(true);
+                    }
+                }
+            });
+            
+            return true;
+        }
+    }
+    
+    private class AdminWorker extends SwingWorker<Boolean, List> {
+        @Override
+        protected void done() {
+            mode = "";
+            try {
+                if (get() != null) {
+                    loading.setIcon(null);
+                    loading.revalidate();
+                }
+            } catch (InterruptedException | ExecutionException ex) {
+                // nothing
+            }
+        }
+        
+        @Override
+        protected void process(List chunks) {
+            aModel.addRow(new Object[] {
+                "",
+                listData.get(0),
+                listData.get(1),
+                listData.get(2),
+            });
+        }
+        
+        @Override
+        protected Boolean doInBackground() throws Exception {
+            showLoading();
+            
+            try {
+                if(mode.equals("all-admin")) {
+                    sql = "SELECT * FROM admin WHERE username != ?";
+                } else if(mode.equals("search-admin")) {
+                    sql = "SELECT * FROM admin WHERE username LIKE ? AND username != ?";
+                }
+                
+                ps = con.prepareStatement(sql);
+                if(mode.equals("search-admin")) {
+                    ps.setString(1, "%" + searchField.getText() + "%");
+                    ps.setString(2, userLogin);
+                } else if(mode.equals("all-admin")) {
+                    ps.setString(1, userLogin);
+                }
+                
+                rs = ps.executeQuery();
+                while(rs.next()) {
+                    listData.add(rs.getString(1));
+                    listData.add(rs.getString(2));
+                    listData.add(rs.getString(4));
+                    publish(listData);
+                    Thread.sleep(100);
+                    listData.clear();
+                }
+            } catch(SQLException e) {
+                return false;
+            }
+            
+            aTb.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    int row = aTb.getSelectedRow();
+                    String check = aTb.getModel().getValueAt(row, 0).toString();
+                    String rowData = aTb.getModel().getValueAt(row, 2).toString();
+
+                    if(check.equals("")) {
+                        aTb.setValueAt("Dipilih", row, 0);
+                        listId.add(rowData);
+                        deleteBtn.setText("DELETE (" + listId.size() + ")");
+                    } else {
+                        aTb.setValueAt("", row, 0);
+                        listId.remove(rowData);
+                        if(listId.size() < 1) {
+                            deleteBtn.setText("DELETE ALL");
+                        } else {
+                            deleteBtn.setText("DELETE (" + listId.size() + ")");
+                        }
+                    }
+
+                    dataClicked = rowData;
+                    editFormMode = "update";
+                    alertPass.setVisible(true);
+                    insertBtn.setVisible(true);
+                    titleForm1.setForeground(new java.awt.Color(0, 153, 0));
+                    submitAdminForm.setBackground(new java.awt.Color(0, 153, 0));
+                    if(adminForm.isShowing()) {
+                        showEditAdmin(rowData);
+                        titleForm1.setText("Edit Admin");
+                        editBtn.setVisible(false);
+                    } else {
+                        editBtn.setVisible(true);
+                    }
+                }
+            });
+            
+            return true;
+        }
+    }
+    
+    private class ApparelWorker extends SwingWorker<Boolean, List> {
+        @Override
+        protected void done() {
+            mode = "";
+            try {
+                if (get() != null) {
+                    loading.setIcon(null);
+                    loading.revalidate();
+                }
+            } catch (InterruptedException | ExecutionException ex) {
+                // nothing
+            }
+        }
+        
+        @Override
+        protected void process(List chunks) {
+            apModel.addRow(new Object[] {
+                "",
+                listData.get(0),
+                listData.get(1),
+                listData.get(2),
+            });
+        }
+        
+        @Override
+        protected Boolean doInBackground() throws Exception {
+            showLoading();
+            
+            try {
+                if(mode.equals("all-apparel")) {
+                    sql = "SELECT a.id_apparel AS id, a.name AS name, (SELECT COUNT(p.apparel) "
+                            + "FROM products p WHERE p.apparel = a.name) AS jumlah FROM apparel a";
+                } else if(mode.equals("search-apparel")) {
+                    sql = "SELECT a.id_apparel AS id, a.name AS name, "
+                            + "(SELECT COUNT(p.apparel) FROM products p WHERE p.apparel = a.name) AS jumlah FROM apparel a WHERE a.name LIKE ?";
+                }
+                
+                ps = con.prepareStatement(sql);
+                if(mode.equals("search-apparel")) ps.setString(1, "%" + searchField.getText() + "%");
+                
+                rs = ps.executeQuery();
+                while(rs.next()) {
+                    listData.add(rs.getString(1));
+                    listData.add(rs.getString(2));
+                    listData.add(rs.getString(3));
+                    publish(listData);
+                    Thread.sleep(100);
+                    listData.clear();
+                }
+            } catch(SQLException e) {
+                return false;
+            }
+            
+            apTb.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    int row = apTb.getSelectedRow();
+                    String check = apTb.getModel().getValueAt(row, 0).toString();
+                    String rowData = apTb.getModel().getValueAt(row, 1).toString();
+
+                    if(check.equals("")) {
+                        apTb.setValueAt("Dipilih", row, 0);
+                        listId.add(rowData);
+                        deleteBtn.setText("DELETE (" + listId.size() + ")");
+                    } else {
+                        apTb.setValueAt("", row, 0);
+                        listId.remove(rowData);
+                        if(listId.size() < 1) {
+                            deleteBtn.setText("DELETE ALL");
+                        } else {
+                            deleteBtn.setText("DELETE (" + listId.size() + ")");
+                        }
+                    }
+
+                    dataClicked = rowData;
+                    apparelModelT.setText("Edit Apparel");
+                    editFormMode = "update";
+                    alertPass.setVisible(false);
+                    insertBtn.setVisible(true);
+                    apparelModelT.setForeground(new java.awt.Color(0, 153, 0));
+                    apparelModelB.setBackground(new java.awt.Color(0, 153, 0));
+                    if(apparelModelP.isShowing()) {
+                        showEditApparel(rowData);
+                        apparelModelT.setText("Edit Apparel");
+                        editBtn.setVisible(false);
+                    } else {
+                        editBtn.setVisible(true);
+                    }
+                }
+            });
+            
+            return true;
+        }
+    }
+    
+    private class ModelWorker extends SwingWorker<Boolean, List> {
+        @Override
+        protected void done() {
+            mode = "";
+            try {
+                if (get() != null) {
+                    loading.setIcon(null);
+                    loading.revalidate();
+                }
+            } catch (InterruptedException | ExecutionException ex) {
+                // nothing
+            }
+        }
+        
+        @Override
+        protected void process(List chunks) {
+            mModel.addRow(new Object[] {
+                "",
+                listData.get(0),
+                listData.get(1),
+                listData.get(2),
+            });
+        }
+        
+        @Override
+        protected Boolean doInBackground() throws Exception {
+            showLoading();
+            
+            try {
+                if(mode.equals("all-model")) {
+                    sql = "SELECT m.id_model AS id, m.name AS name, (SELECT COUNT(p.model) FROM products p WHERE p.model = m.name) AS jumlah FROM model m";
+                } else if(mode.equals("search-model")) {
+                    sql = "SELECT m.id_model AS id, m.name AS name, (SELECT COUNT(p.model) FROM products p WHERE p.model = m.name) AS jumlah FROM model m WHERE m.name LIKE ?";
+                }
+                
+                ps = con.prepareStatement(sql);
+                if(mode.equals("search-model")) ps.setString(1, "%" + searchField.getText() + "%");
+                
+                rs = ps.executeQuery();
+                while(rs.next()) {
+                    listData.add(rs.getString(1));
+                    listData.add(rs.getString(2));
+                    listData.add(rs.getString(3));
+                    publish(listData);
+                    Thread.sleep(100);
+                    listData.clear();
+                }
+            } catch(SQLException e) {
+                return false;
+            }
+            
+            mTb.addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent evt) {
+                    int row = mTb.getSelectedRow();
+                    String check = mTb.getModel().getValueAt(row, 0).toString();
+                    String rowData = mTb.getModel().getValueAt(row, 1).toString();
+
+                    if(check.equals("")) {
+                        mTb.setValueAt("Dipilih", row, 0);
+                        listId.add(rowData);
+                        deleteBtn.setText("DELETE (" + listId.size() + ")");
+                    } else {
+                        mTb.setValueAt("", row, 0);
+                        listId.remove(rowData);
+                        if(listId.size() < 1) {
+                            deleteBtn.setText("DELETE ALL");
+                        } else {
+                            deleteBtn.setText("DELETE (" + listId.size() + ")");
+                        }
+                    }
+
+                    apparelModelT.setText("Edit Model");
+                    dataClicked = rowData;
+                    editFormMode = "update";
+                    alertPass.setVisible(true);
+                    insertBtn.setVisible(true);
+                    apparelModelT.setForeground(new java.awt.Color(0, 153, 0));
+                    apparelModelB.setBackground(new java.awt.Color(0, 153, 0));
+                    if(apparelModelP.isShowing()) {
+                        showEditModel(rowData);
+                        editBtn.setVisible(false);
+                    } else {
+                        editBtn.setVisible(true);
+                    }
+                }
+            });
+            
+            return true;
+        }
+    }
+    
+    private void showDataAdmin() {
+        if(mode.equals("all-admin-show")) {
+            aModel = (DefaultTableModel) aTb.getModel();
+            aModel.setRowCount(0);
+            mode = "all-admin";
+        } else if(mode.equals("add-admin") || mode.equals("edit-admin")) {
+            aModel = (DefaultTableModel) aTb.getModel();
+            aModel.setRowCount(0);
+            mode = "all-admin";
+        } else {
+            mode = "all-admin";
+            this.setTitle("Data Admin");
+            exportExcel.setVisible(false);
+            searchField.setVisible(true);
+            searchBtn.setVisible(true);
+            deleteBtn.setText("DELETE ALL");
+            listId.clear();
+            showAll.setVisible(false);
+            exportExcel.setVisible(false);
+            
+            JPanel tableBox = new JPanel();
+            tableBox.setBackground(Color.white);
+            tableBox.setLayout(new GridLayout(1, 0));
+            aTb.setModel(new DefaultTableModel(
+                new Object [][] {},
+                new String [] {
+                    "#", "Id", "Username", "Role"
+                }
+            ) {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            });
+
+            JScrollPane scrollPane = new JScrollPane(aTb);
+            tableBox.add(scrollPane);
+            contentPanel.add(tableBox);
+            aModel = (DefaultTableModel) aTb.getModel();
+        }
+        
+        aWorker = new AdminWorker();
+        aWorker.execute();
     }
     
     private void showEditAdmin(String username) {
@@ -250,88 +679,49 @@ public class Dashboard extends javax.swing.JFrame {
     }
     
     private void showDataProducts() {
-        this.setTitle("Data Products");
-        searchField.setVisible(true);
-        searchBtn.setVisible(true);
-        insertBtn.setVisible(true);
-        editBtn.setVisible(false);
-        deleteBtn.setText("DELETE ALL");
-        listId.clear();
-        showAll.setVisible(false);
-        exportExcel.setVisible(true);
-        
-        JPanel tableBox = new JPanel();
-        tableBox.setBackground(Color.white);
-        tableBox.setLayout(new GridLayout(1, 0));
-        tb = new JTable();
-        DefaultTableModel table = new DefaultTableModel() {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        table.addColumn("#");
-        table.addColumn("Id");
-        table.addColumn("Nama");
-        table.addColumn("Model");
-        table.addColumn("Kategori");
-        table.addColumn("Apparel");
-        table.addColumn("Stok");
-        table.addColumn("Harga");
-        try {
-            sql = "SELECT * FROM products";
-            ps = con.prepareStatement(sql);
-            rs = ps.executeQuery();
-            while(rs.next()) {
-                table.addRow(new Object[] {
-                    "", rs.getString(1), rs.getString(2),
-                    rs.getString(3), rs.getString(4),
-                    rs.getString(5), rs.getString(6),
-                    rs.getString(8)
-                });
-            }
-            tb.setModel(table);
-        } catch(SQLException e) {
-            JOptionPane.showMessageDialog(null, e);
+        if(mode.equals("all-product-show")) {
+            pModel = (DefaultTableModel) pTb.getModel();
+            pModel.setRowCount(0);
+            mode = "all-product";
+        } else if(mode.equals("add-product") || mode.equals("edit-product")) {
+            pModel = (DefaultTableModel) pTb.getModel();
+            pModel.setRowCount(0);
+            mode = "all-product";
+        } else if(mode.equals("all-product")) {
+            this.setTitle("Data Products");
+            searchField.setVisible(true);
+            searchBtn.setVisible(true);
+            insertBtn.setVisible(true);
+            editBtn.setVisible(false);
+            deleteBtn.setText("DELETE ALL");
+            listId.clear();
+            showAll.setVisible(false);
+            exportExcel.setVisible(true);
+            
+            JPanel tableBox = new JPanel();
+            tableBox.setBackground(Color.white);
+            tableBox.setLayout(new GridLayout(1, 0));
+            pTb.setModel(new DefaultTableModel(
+                new Object [][] {
+                },
+                new String [] {
+                    "#", "Id", "Nama", "Model", "Kategori", "Apparel", "Stok", "Harga"
+                }
+            ) {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            });
+
+            JScrollPane scrollPane = new JScrollPane(pTb);
+            tableBox.add(scrollPane);
+            contentPanel.add(tableBox);
+            pModel = (DefaultTableModel) pTb.getModel();
         }
-        tb.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                int row = tb.getSelectedRow();
-                String check = tb.getModel().getValueAt(row, 0).toString();
-                String rowData = tb.getModel().getValueAt(row, 1).toString();
-                
-                if(check.equals("")) {
-                    tb.setValueAt("Dipilih", row, 0);
-                    listId.add(rowData);
-                    deleteBtn.setText("DELETE (" + listId.size() + ")");
-                } else {
-                    tb.setValueAt("", row, 0);
-                    listId.remove(rowData);
-                    if(listId.size() < 1) {
-                        deleteBtn.setText("DELETE ALL");
-                    } else {
-                        deleteBtn.setText("DELETE (" + listId.size() + ")");
-                    }
-                }
-                
-                dataClicked = rowData;
-                editFormMode = "update";
-                insertBtn.setVisible(true);
-                titleForm.setForeground(new java.awt.Color(0, 153, 0));
-                submitProducts.setBackground(new java.awt.Color(0, 153, 0));
-                if(editForm.isShowing()) {
-                    showEditProducts(rowData);
-                    titleForm.setText("Edit Product");
-                    editBtn.setVisible(false);
-                } else {
-                    editBtn.setVisible(true);
-                }
-            }
-        });
-        JScrollPane scrollPane = new JScrollPane(tb);
-        tableBox.add(scrollPane);
-        contentPanel.add(tableBox);
+        
+        pWorker = new ProductWorker();
+        pWorker.execute();
     }
     
     private void showEditProducts(String id) {
@@ -367,47 +757,42 @@ public class Dashboard extends javax.swing.JFrame {
     }
     
     private void showDataUsers() {
-        this.setTitle("Data Users");
-        searchField.setVisible(true);
-        searchBtn.setVisible(true);
-        insertBtn.setVisible(false);
-        editBtn.setVisible(false);
-        showAll.setVisible(false);
-        exportExcel.setVisible(false);
-        
-        JPanel tableBox = new JPanel();
-        tableBox.setBackground(Color.white);
-        tableBox.setLayout(new GridLayout(1, 0));
-        tb = new JTable();
-        DefaultTableModel table = new DefaultTableModel() {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        table.addColumn("Id");
-        table.addColumn("Username");
-        table.addColumn("Produk Terakhir Dibeli");
-        table.addColumn("Tanggal Terakhir Order");
-        try {
-            sql = "SELECT u.id as id, u.username as user, p.name AS produk, mo.order_date as orderdate FROM users u "
-                    + "JOIN myorder mo ON u.username = mo.username JOIN products p ON mo.id_product = p.id_product "
-                    + "WHERE mo.order_date = ( SELECT MAX(order_date) FROM myorder WHERE username = u.username )";
-            ps = con.prepareStatement(sql);
-            rs = ps.executeQuery();
-            while(rs.next()) {
-                table.addRow(new Object[] {
-                    rs.getString(1), rs.getString(2),
-                    rs.getString(3), rs.getString(4)
-                });
-            }
-            tb.setModel(table);
-        } catch(SQLException e) {
-            JOptionPane.showMessageDialog(null, e);
+        if(mode.equals("all-users-show")) {
+            uModel = (DefaultTableModel) uTb.getModel();
+            uModel.setRowCount(0);
+            mode = "all-users";
+        } else if(mode.equals("all-users")) {
+            this.setTitle("Data Users");
+            searchField.setVisible(true);
+            searchBtn.setVisible(true);
+            insertBtn.setVisible(false);
+            editBtn.setVisible(false);
+            showAll.setVisible(false);
+            exportExcel.setVisible(false);
+
+            JPanel tableBox = new JPanel();
+            tableBox.setBackground(Color.white);
+            tableBox.setLayout(new GridLayout(1, 0));
+            uTb.setModel(new DefaultTableModel(
+                new Object [][] {},
+                new String [] {
+                    "Id", "Username", "Produk Terakhir Dibeli", "Tanggal Terakhir Order"
+                }
+            ) {
+                @Override
+                public boolean isCellEditable(int row, int column) {
+                    return false;
+                }
+            });
+
+            JScrollPane scrollPane = new JScrollPane(uTb);
+            tableBox.add(scrollPane);
+            contentPanel.add(tableBox);
+            uModel = (DefaultTableModel) uTb.getModel();
         }
-        JScrollPane scrollPane = new JScrollPane(tb);
-        tableBox.add(scrollPane);
-        contentPanel.add(tableBox);
+        
+        uWorker = new UsersWorker();
+        uWorker.execute();
     }
     
     private void checkPage(int page) {
@@ -724,6 +1109,7 @@ public class Dashboard extends javax.swing.JFrame {
         deleteBtn = new javax.swing.JButton();
         showAll = new javax.swing.JButton();
         exportExcel = new javax.swing.JButton();
+        loading = new javax.swing.JLabel();
         editForm = new javax.swing.JPanel();
         titleForm = new javax.swing.JLabel();
         jLabel4 = new javax.swing.JLabel();
@@ -1279,7 +1665,9 @@ public class Dashboard extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addGap(14, 14, 14)
                 .addComponent(title)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 72, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(loading)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 66, Short.MAX_VALUE)
                 .addComponent(exportExcel, javax.swing.GroupLayout.PREFERRED_SIZE, 99, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(showAll, javax.swing.GroupLayout.PREFERRED_SIZE, 80, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -1299,7 +1687,7 @@ public class Dashboard extends javax.swing.JFrame {
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+            .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
@@ -1313,7 +1701,8 @@ public class Dashboard extends javax.swing.JFrame {
                             .addComponent(insertBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(deleteBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(showAll, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                            .addComponent(exportExcel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(exportExcel, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                            .addComponent(loading, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                         .addGap(2, 2, 2)))
                 .addGap(3, 3, 3))
         );
@@ -1941,6 +2330,8 @@ public class Dashboard extends javax.swing.JFrame {
 
     private void usersBtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_usersBtnMouseClicked
         if(pageSelected != 2) {
+            listId.clear();
+            listData.clear();
             title.setText("Data Users");
             checkPage(pageSelected);
             pageSelected = 2;
@@ -1958,12 +2349,14 @@ public class Dashboard extends javax.swing.JFrame {
             editForm.setVisible(false);
             deleteBtn.setVisible(false);
             searchField.setText("");
+            mode = "all-users";
             showDataUsers();
         }
     }//GEN-LAST:event_usersBtnMouseClicked
 
     private void productBtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_productBtnMouseClicked
         if(pageSelected != 3) {
+            listId.clear();
             title.setText("Data Products");
             checkPage(pageSelected);
             pageSelected = 3;
@@ -1984,6 +2377,7 @@ public class Dashboard extends javax.swing.JFrame {
             checkFieldEditForm();
             editForm.setVisible(false);
             apparelModelP.setVisible(false);
+            mode = "all-product";
             showDataProducts();
             showAllComboBox();
         }
@@ -1991,6 +2385,7 @@ public class Dashboard extends javax.swing.JFrame {
 
     private void adminBtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_adminBtnMouseClicked
         if(pageSelected != 4) {
+            listData.clear();
             title.setText("Data Admin");
             checkPage(pageSelected);
             pageSelected = 4;
@@ -2011,6 +2406,7 @@ public class Dashboard extends javax.swing.JFrame {
             editForm.setVisible(false);
             apparelModelP.setVisible(false);
             checkFieldAdminForm();
+            mode = "all-admin";
             showDataAdmin();
         }
     }//GEN-LAST:event_adminBtnMouseClicked
@@ -2042,7 +2438,6 @@ public class Dashboard extends javax.swing.JFrame {
             }
             
             ps.close();
-            rs.close();
         } catch (SQLException e) {
             JOptionPane.showMessageDialog(null, e);
         }
@@ -2357,12 +2752,12 @@ public class Dashboard extends javax.swing.JFrame {
                 imageThumb.repaint();
                 modelField.removeAllItems();
                 apparelField.removeAllItems();
+                listId.clear();
+                deleteBtn.setText("DELETE ALL");
                 
                 headerInformation();
-                contentPanel.removeAll();
-                contentPanel.revalidate();
-                contentPanel.repaint();
                 showAllComboBox();
+                mode = "add-products";
                 showDataProducts();
                 
                 JOptionPane.showMessageDialog(null, "Berhasil menambahkan data produk");
@@ -2421,11 +2816,11 @@ public class Dashboard extends javax.swing.JFrame {
                 imageThumb.repaint();
                 modelField.removeAllItems();
                 apparelField.removeAllItems();
+                listId.clear();
+                deleteBtn.setText("DELETE ALL");
                 
-                contentPanel.removeAll();
-                contentPanel.revalidate();
-                contentPanel.repaint();
                 showAllComboBox();
+                mode = "edit-product";
                 showDataProducts();
                 editForm.setVisible(false);
                 
@@ -2663,10 +3058,7 @@ public class Dashboard extends javax.swing.JFrame {
                     usernameField.setText("");
                     passwordField.setText("");
                     roleField.setSelectedIndex(0);
-                    contentPanel.removeAll();
-                    contentPanel.revalidate();
-                    contentPanel.repaint();
-                    contentPanel.setLayout(new GridLayout(1, 0));
+                    mode = "add-admin";
                     showDataAdmin();
                     
                     JOptionPane.showMessageDialog(null, "Berhasil menambahkan admin baru");
@@ -2716,10 +3108,7 @@ public class Dashboard extends javax.swing.JFrame {
                     
                     usernameField.setText("");
                     passwordField.setText("");
-                    contentPanel.removeAll();
-                    contentPanel.revalidate();
-                    contentPanel.repaint();
-                    contentPanel.setLayout(new GridLayout(1, 0));
+                    mode = "edit-admin";
                     showDataAdmin();
                     
                     JOptionPane.showMessageDialog(null, "Berhasil mengubah data admin");
@@ -2780,10 +3169,7 @@ public class Dashboard extends javax.swing.JFrame {
                     ps.executeUpdate();
                     
                     apparelModelF.setText("");
-                    contentPanel.removeAll();
-                    contentPanel.revalidate();
-                    contentPanel.repaint();
-                    contentPanel.setLayout(new GridLayout(1, 0));
+                    mode = "add-apparel";
                     showDataApparel();
                     insertBtn.setVisible(false);
                     
@@ -2820,10 +3206,7 @@ public class Dashboard extends javax.swing.JFrame {
                     ps.executeUpdate();
                     
                     apparelModelF.setText("");
-                    contentPanel.removeAll();
-                    contentPanel.revalidate();
-                    contentPanel.repaint();
-                    contentPanel.setLayout(new GridLayout(1, 0));
+                    mode = "edit-apparel";
                     showDataApparel();
                     
                     JOptionPane.showMessageDialog(null, "Berhasil mengubah data apparel");
@@ -2858,10 +3241,7 @@ public class Dashboard extends javax.swing.JFrame {
                     ps.executeUpdate();
                     
                     apparelModelF.setText("");
-                    contentPanel.removeAll();
-                    contentPanel.revalidate();
-                    contentPanel.repaint();
-                    contentPanel.setLayout(new GridLayout(1, 0));
+                    mode = "add-model";
                     showDataModel();
                     
                     JOptionPane.showMessageDialog(null, "Berhasil menambahkan data model");
@@ -2897,10 +3277,7 @@ public class Dashboard extends javax.swing.JFrame {
                     ps.executeUpdate();
                     
                     apparelModelF.setText("");
-                    contentPanel.removeAll();
-                    contentPanel.revalidate();
-                    contentPanel.repaint();
-                    contentPanel.setLayout(new GridLayout(1, 0));
+                    mode = "edit-model";
                     showDataModel();
                     
                     JOptionPane.showMessageDialog(null, "Berhasil mengubah data model");
@@ -2927,6 +3304,7 @@ public class Dashboard extends javax.swing.JFrame {
 
     private void modelBtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_modelBtnMouseClicked
         if(pageSelected != 6) {
+            listData.clear();
             title.setText("Data Model");
             checkPage(pageSelected);
             pageSelected = 6;
@@ -2948,6 +3326,7 @@ public class Dashboard extends javax.swing.JFrame {
             adminForm.setVisible(false);
             apparelModelP.setVisible(false);
             checkFieldApparelModel();
+            mode = "all-model";
             showDataModel();
         }
     }//GEN-LAST:event_modelBtnMouseClicked
@@ -2968,6 +3347,7 @@ public class Dashboard extends javax.swing.JFrame {
 
     private void apparelBtnMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_apparelBtnMouseClicked
         if(pageSelected != 5) {
+            listData.clear();
             title.setText("Data Apparel");
             checkPage(pageSelected);
             pageSelected = 5;
@@ -2989,6 +3369,7 @@ public class Dashboard extends javax.swing.JFrame {
             apparelModelP.setVisible(false);
             adminForm.setVisible(false);
             checkFieldApparelModel();
+            mode = "all-apparel";
             showDataApparel();
         }
     }//GEN-LAST:event_apparelBtnMouseClicked
@@ -2999,6 +3380,7 @@ public class Dashboard extends javax.swing.JFrame {
         showAll.setVisible(true);
         switch(pageSelected) {
             case 2 -> {
+                mode = "search-users";
                 searchUser();
             }
             case 3 -> {
@@ -3006,6 +3388,7 @@ public class Dashboard extends javax.swing.JFrame {
                     editForm.setVisible(false);
                     editBtn.setVisible(false);
                 }
+                mode = "search-product";
                 searchProduct();
             }
             case 4 -> {
@@ -3013,6 +3396,7 @@ public class Dashboard extends javax.swing.JFrame {
                     editForm.setVisible(false);
                     editBtn.setVisible(false);
                 }
+                mode = "search-admin";
                 searchAdmin();
             }
             case 5 -> {
@@ -3020,6 +3404,7 @@ public class Dashboard extends javax.swing.JFrame {
                     editForm.setVisible(false);
                     editBtn.setVisible(false);
                 }
+                mode = "search-apparel";
                 searchApparel();
             }
             case 6 -> {
@@ -3027,6 +3412,7 @@ public class Dashboard extends javax.swing.JFrame {
                     editForm.setVisible(false);
                     editBtn.setVisible(false);
                 }
+                mode = "search-model";
                 searchModel();
             }
             default -> {
@@ -3039,38 +3425,23 @@ public class Dashboard extends javax.swing.JFrame {
         searchField.setText("");
         switch(pageSelected) {
             case 2 -> {
-                contentPanel.removeAll();
-                contentPanel.revalidate();
-                contentPanel.repaint();
-                contentPanel.setLayout(new GridLayout(1, 0));
+                mode = "all-users-show";
                 showDataUsers();
             }
             case 3 -> {
-                contentPanel.removeAll();
-                contentPanel.revalidate();
-                contentPanel.repaint();
-                contentPanel.setLayout(new GridLayout(1, 0));
+                mode = "all-product-show";
                 showDataProducts();
             }
             case 4 -> {
-                contentPanel.removeAll();
-                contentPanel.revalidate();
-                contentPanel.repaint();
-                contentPanel.setLayout(new GridLayout(1, 0));
+                mode = "all-admin-show";
                 showDataAdmin();
             }
             case 5 -> {
-                contentPanel.removeAll();
-                contentPanel.revalidate();
-                contentPanel.repaint();
-                contentPanel.setLayout(new GridLayout(1, 0));
+                mode = "all-apparel-show";
                 showDataApparel();
             }
             case 6 -> {
-                contentPanel.removeAll();
-                contentPanel.revalidate();
-                contentPanel.repaint();
-                contentPanel.setLayout(new GridLayout(1, 0));
+                mode = "all-model-show";
                 showDataModel();
             }
             default -> {
@@ -3419,216 +3790,38 @@ public class Dashboard extends javax.swing.JFrame {
     }
     
     private void searchUser() {
-        try {
-            sql = "SELECT u.id as id, u.username as user, p.name AS produk, mo.order_date as orderdate "
-                    + "FROM users u JOIN myorder mo ON u.username = mo.username "
-                    + "JOIN products p ON mo.id_product = p.id_product "
-                    + "WHERE mo.order_date = ( SELECT MAX(order_date) FROM myorder WHERE username LIKE ? )";
-            ps = con.prepareStatement(sql);
-            ps.setString(1, "%" + searchField.getText() + "%");
-            DefaultTableModel tbModel = (DefaultTableModel) tb.getModel();
-            tbModel.setRowCount(0);
-            rs = ps.executeQuery();
-            while(rs.next()) {
-                tbModel.addRow(new Object[] {
-                    "", rs.getString(1), rs.getString(2), rs.getString(3)
-                });
-            }
-            tb.setModel(tbModel);
-        } catch(SQLException e) {
-            JOptionPane.showMessageDialog(null, e);
-        }
+        uModel = (DefaultTableModel) uTb.getModel();
+        uModel.setRowCount(0);
+        
+        showDataUsers();
     }
     
     private void searchProduct() {
-        try {
-            sql = "SELECT * FROM products WHERE name LIKE ? OR apparel LIKE ? OR model LIKE ?";
-            ps = con.prepareStatement(sql);
-            ps.setString(1, "%" + searchField.getText() + "%");
-            ps.setString(2, "%" + searchField.getText() + "%");
-            ps.setString(3, "%" + searchField.getText() + "%");
-            DefaultTableModel tbModel = (DefaultTableModel) tb.getModel();
-            tbModel.setRowCount(0);
-            rs = ps.executeQuery();
-            while(rs.next()) {
-                tbModel.addRow(new Object[] {
-                    "", rs.getString(1), rs.getString(2), 
-                    rs.getString(3), rs.getString(4), rs.getString(5),
-                    rs.getString(6), rs.getString(8)
-                });
-            }
-            tb.setModel(tbModel);
-        } catch(SQLException e) {
-            JOptionPane.showMessageDialog(null, e);
-        }
+        pModel = (DefaultTableModel) pTb.getModel();
+        pModel.setRowCount(0);
+        
+        showDataProducts();
     }
     
     private void searchAdmin() {
-        try {
-            sql = "SELECT * FROM admin WHERE username LIKE ?";
-            ps = con.prepareStatement(sql);
-            ps.setString(1, "%" + searchField.getText() + "%");
-            DefaultTableModel tbModel = (DefaultTableModel) tb.getModel();
-            tbModel.setRowCount(0);
-            rs = ps.executeQuery();
-            while(rs.next()) {
-                tbModel.addRow(new Object[] {
-                    "", rs.getString(1), rs.getString(2)
-                });
-            }
-            tb.setModel(tbModel);
-            tb.addMouseListener(new java.awt.event.MouseAdapter() {
-                @Override
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    int row = tb.getSelectedRow();
-                    String check = tb.getModel().getValueAt(row, 0).toString();
-                    String rowData = tb.getModel().getValueAt(row, 2).toString();
-
-                    if(check.equals("")) {
-                        tb.setValueAt("Dipilih", row, 0);
-                        listId.add(rowData);
-                        deleteBtn.setText("DELETE (" + listId.size() + ")");
-                    } else {
-                        tb.setValueAt("", row, 0);
-                        listId.remove(rowData);
-                        if(listId.size() < 1) {
-                            deleteBtn.setText("DELETE ALL");
-                        } else {
-                            deleteBtn.setText("DELETE (" + listId.size() + ")");
-                        }
-                    }
-
-                    dataClicked = rowData;
-                    editFormMode = "update";
-                    alertPass.setVisible(true);
-                    insertBtn.setVisible(true);
-                    titleForm1.setForeground(new java.awt.Color(0, 153, 0));
-                    submitAdminForm.setBackground(new java.awt.Color(0, 153, 0));
-                    if(adminForm.isShowing()) {
-                        showEditAdmin(rowData);
-                        titleForm1.setText("Edit Admin");
-                        editBtn.setVisible(false);
-                    } else {
-                        editBtn.setVisible(true);
-                    }
-                }
-            });
-        } catch(SQLException e) {
-            JOptionPane.showMessageDialog(null, e);
-        }
+        aModel = (DefaultTableModel) aTb.getModel();
+        aModel.setRowCount(0);
+        
+        showDataAdmin();
     }
     
     private void searchApparel() {
-        try {
-            sql = "SELECT a.id_apparel AS id, a.name AS name, (SELECT COUNT(p.apparel) FROM products p WHERE p.apparel = a.name) AS jumlah FROM apparel a WHERE a.name LIKE ?";
-            ps = con.prepareStatement(sql);
-            ps.setString(1, "%" + searchField.getText() + "%");
-            DefaultTableModel tbModel = (DefaultTableModel) tb.getModel();
-            tbModel.setRowCount(0);
-            rs = ps.executeQuery();
-            while(rs.next()) {
-                tbModel.addRow(new Object[] {
-                    "", rs.getString(1), rs.getString(2), 
-                    rs.getString(3)
-                });
-            }
-            tb.setModel(tbModel);
-            tb.addMouseListener(new java.awt.event.MouseAdapter() {
-                @Override
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    int row = tb.getSelectedRow();
-                    String check = tb.getModel().getValueAt(row, 0).toString();
-                    String rowData = tb.getModel().getValueAt(row, 1).toString();
-
-                    if(check.equals("")) {
-                        tb.setValueAt("Dipilih", row, 0);
-                        listId.add(rowData);
-                        deleteBtn.setText("DELETE (" + listId.size() + ")");
-                    } else {
-                        tb.setValueAt("", row, 0);
-                        listId.remove(rowData);
-                        if(listId.size() < 1) {
-                            deleteBtn.setText("DELETE ALL");
-                        } else {
-                            deleteBtn.setText("DELETE (" + listId.size() + ")");
-                        }
-                    }
-
-                    dataClicked = rowData;
-                    apparelModelT.setText("Edit Apparel");
-                    editFormMode = "update";
-                    alertPass.setVisible(false);
-                    insertBtn.setVisible(true);
-                    apparelModelT.setForeground(new java.awt.Color(0, 153, 0));
-                    apparelModelB.setBackground(new java.awt.Color(0, 153, 0));
-                    if(apparelModelP.isShowing()) {
-                        showEditApparel(rowData);
-                        apparelModelT.setText("Edit Apparel");
-                        editBtn.setVisible(false);
-                    } else {
-                        editBtn.setVisible(true);
-                    }
-                }
-            });
-        } catch(SQLException e) {
-            JOptionPane.showMessageDialog(null, e);
-        }
+        apModel = (DefaultTableModel) apTb.getModel();
+        apModel.setRowCount(0);
+        
+        showDataApparel();
     }
     
     private void searchModel() {
-        try {
-            sql = "SELECT m.id_model AS id, m.name AS name, (SELECT COUNT(p.model) FROM products p WHERE p.model = m.name) AS jumlah FROM model m WHERE m.name LIKE ?";
-            ps = con.prepareStatement(sql);
-            ps.setString(1, "%" + searchField.getText() + "%");
-            DefaultTableModel tbModel = (DefaultTableModel) tb.getModel();
-            tbModel.setRowCount(0);
-            rs = ps.executeQuery();
-            while(rs.next()) {
-                tbModel.addRow(new Object[] {
-                    "", rs.getString(1), rs.getString(2), 
-                    rs.getString(3)
-                });
-            }
-            tb.setModel(tbModel);
-            tb.addMouseListener(new java.awt.event.MouseAdapter() {
-                @Override
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    int row = tb.getSelectedRow();
-                    String check = tb.getModel().getValueAt(row, 0).toString();
-                    String rowData = tb.getModel().getValueAt(row, 1).toString();
-
-                    if(check.equals("")) {
-                        tb.setValueAt("Dipilih", row, 0);
-                        listId.add(rowData);
-                        deleteBtn.setText("DELETE (" + listId.size() + ")");
-                    } else {
-                        tb.setValueAt("", row, 0);
-                        listId.remove(rowData);
-                        if(listId.size() < 1) {
-                            deleteBtn.setText("DELETE ALL");
-                        } else {
-                            deleteBtn.setText("DELETE (" + listId.size() + ")");
-                        }
-                    }
-
-                    apparelModelT.setText("Edit Model");
-                    dataClicked = rowData;
-                    editFormMode = "update";
-                    alertPass.setVisible(true);
-                    insertBtn.setVisible(true);
-                    apparelModelT.setForeground(new java.awt.Color(0, 153, 0));
-                    apparelModelB.setBackground(new java.awt.Color(0, 153, 0));
-                    if(apparelModelP.isShowing()) {
-                        showEditModel(rowData);
-                        editBtn.setVisible(false);
-                    } else {
-                        editBtn.setVisible(true);
-                    }
-                }
-            });
-        } catch(SQLException e) {
-            JOptionPane.showMessageDialog(null, e);
-        }
+        mModel = (DefaultTableModel) mTb.getModel();
+        mModel.setRowCount(0);
+        
+        showDataModel();
     }
     
     private void checkFieldApparelModel() {
@@ -3657,164 +3850,95 @@ public class Dashboard extends javax.swing.JFrame {
     }
     
     private void showDataApparel() {
-        this.setTitle("Data Apparel");
-        exportExcel.setVisible(false);
-        searchField.setVisible(true);
-        searchBtn.setVisible(true);
-        insertBtn.setVisible(true);
-        editBtn.setVisible(false);
-        deleteBtn.setText("DELETE ALL");
-        listId.clear();
-        showAll.setVisible(false);
-        exportExcel.setVisible(true);
-        
-        JPanel tableBox = new JPanel();
-        tableBox.setBackground(Color.white);
-        tableBox.setLayout(new GridLayout(1, 0));
-        tb = new JTable();
-        DefaultTableModel table = new DefaultTableModel() {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        table.addColumn("#");
-        table.addColumn("Id");
-        table.addColumn("Nama");
-        table.addColumn("Jumlah Produk");
-        try {
-            sql = "SELECT a.id_apparel AS id, a.name AS name, (SELECT COUNT(p.apparel) FROM products p WHERE p.apparel = a.name) AS jumlah FROM apparel a";
-            ps = con.prepareStatement(sql);
-            rs = ps.executeQuery();
-            while(rs.next()) {
-                table.addRow(new Object[] {
-                    "", rs.getString(1), rs.getString(2), rs.getString(3)
-                });
-            }
-            tb.setModel(table);
-            tb.addMouseListener(new java.awt.event.MouseAdapter() {
+        if(mode.equals("all-apparel-show")) {
+            apModel = (DefaultTableModel) apTb.getModel();
+            apModel.setRowCount(0);
+            mode = "all-apparel";
+        } else if(mode.equals("add-apparel") || mode.equals("edit-apparel")) {
+            apModel = (DefaultTableModel) apTb.getModel();
+            apModel.setRowCount(0);
+            mode = "all-apparel";
+        } else if(mode.equals("all-apparel")) {
+            this.setTitle("Data Apparel");
+            exportExcel.setVisible(false);
+            searchField.setVisible(true);
+            searchBtn.setVisible(true);
+            insertBtn.setVisible(true);
+            editBtn.setVisible(false);
+            deleteBtn.setText("DELETE ALL");
+            listId.clear();
+            showAll.setVisible(false);
+            exportExcel.setVisible(true);
+
+            JPanel tableBox = new JPanel();
+            tableBox.setBackground(Color.white);
+            tableBox.setLayout(new GridLayout(1, 0));
+            apTb.setModel(new DefaultTableModel(
+                new Object [][] {},
+                new String [] {
+                    "#", "Id", "Nama", "Jumlah Produk"
+                }
+            ) {
                 @Override
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    int row = tb.getSelectedRow();
-                    String check = tb.getModel().getValueAt(row, 0).toString();
-                    String rowData = tb.getModel().getValueAt(row, 1).toString();
-
-                    if(check.equals("")) {
-                        tb.setValueAt("Dipilih", row, 0);
-                        listId.add(rowData);
-                        deleteBtn.setText("DELETE (" + listId.size() + ")");
-                    } else {
-                        tb.setValueAt("", row, 0);
-                        listId.remove(rowData);
-                        if(listId.size() < 1) {
-                            deleteBtn.setText("DELETE ALL");
-                        } else {
-                            deleteBtn.setText("DELETE (" + listId.size() + ")");
-                        }
-                    }
-
-                    dataClicked = rowData;
-                    apparelModelT.setText("Edit Apparel");
-                    editFormMode = "update";
-                    alertPass.setVisible(false);
-                    insertBtn.setVisible(true);
-                    apparelModelT.setForeground(new java.awt.Color(0, 153, 0));
-                    apparelModelB.setBackground(new java.awt.Color(0, 153, 0));
-                    if(apparelModelP.isShowing()) {
-                        showEditApparel(rowData);
-                        apparelModelT.setText("Edit Apparel");
-                        editBtn.setVisible(false);
-                    } else {
-                        editBtn.setVisible(true);
-                    }
+                public boolean isCellEditable(int row, int column) {
+                    return false;
                 }
             });
-        } catch(SQLException e) {
-            JOptionPane.showMessageDialog(null, e);
+
+            JScrollPane scrollPane = new JScrollPane(apTb);
+            tableBox.add(scrollPane);
+            contentPanel.add(tableBox);
+            apModel = (DefaultTableModel) apTb.getModel();
         }
-        JScrollPane scrollPane = new JScrollPane(tb);
-        tableBox.add(scrollPane);
-        contentPanel.add(tableBox);
+        
+        apWorker = new ApparelWorker();
+        apWorker.execute();
     }
     
     private void showDataModel() {
-        this.setTitle("Data Model");
-        exportExcel.setVisible(false);
-        searchField.setVisible(true);
-        searchBtn.setVisible(true);
-        insertBtn.setVisible(true);
-        editBtn.setVisible(false);
-        deleteBtn.setText("DELETE ALL");
-        listId.clear();
-        showAll.setVisible(false);
-        exportExcel.setVisible(true);
-        
-        JPanel tableBox = new JPanel();
-        tableBox.setBackground(Color.white);
-        tableBox.setLayout(new GridLayout(1, 0));
-        tb = new JTable();
-        DefaultTableModel table = new DefaultTableModel() {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
-        };
-        table.addColumn("#");
-        table.addColumn("Id");
-        table.addColumn("Nama");
-        table.addColumn("Jumlah Produk");
-        try {
-            sql = "SELECT m.id_model AS id, m.name AS name, (SELECT COUNT(p.model) FROM products p WHERE p.model = m.name) AS jumlah FROM model m";
-            ps = con.prepareStatement(sql);
-            rs = ps.executeQuery();
-            while(rs.next()) {
-                table.addRow(new Object[] {
-                    "", rs.getString(1), rs.getString(2), rs.getString(3)
-                });
-            }
-            tb.setModel(table);
-            tb.addMouseListener(new java.awt.event.MouseAdapter() {
+        if(mode.equals("all-model-show")) {
+            mModel = (DefaultTableModel) mTb.getModel();
+            mModel.setRowCount(0);
+            mode = "all-model";
+        } else if(mode.equals("add-model") || mode.equals("edit-model")) {
+            mModel = (DefaultTableModel) mTb.getModel();
+            mModel.setRowCount(0);
+            mode = "all-model";
+        } else if(mode.equals("all-model")) {
+            this.setTitle("Data Model");
+            exportExcel.setVisible(false);
+            searchField.setVisible(true);
+            searchBtn.setVisible(true);
+            insertBtn.setVisible(true);
+            editBtn.setVisible(false);
+            deleteBtn.setText("DELETE ALL");
+            listId.clear();
+            showAll.setVisible(false);
+            exportExcel.setVisible(true);
+
+            JPanel tableBox = new JPanel();
+            tableBox.setBackground(Color.white);
+            tableBox.setLayout(new GridLayout(1, 0));
+            mTb.setModel(new DefaultTableModel(
+                new Object [][] {},
+                new String [] {
+                    "#", "Id", "Nama", "Jumlah Produk"
+                }
+            ) {
                 @Override
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    int row = tb.getSelectedRow();
-                    String check = tb.getModel().getValueAt(row, 0).toString();
-                    String rowData = tb.getModel().getValueAt(row, 1).toString();
-
-                    if(check.equals("")) {
-                        tb.setValueAt("Dipilih", row, 0);
-                        listId.add(rowData);
-                        deleteBtn.setText("DELETE (" + listId.size() + ")");
-                    } else {
-                        tb.setValueAt("", row, 0);
-                        listId.remove(rowData);
-                        if(listId.size() < 1) {
-                            deleteBtn.setText("DELETE ALL");
-                        } else {
-                            deleteBtn.setText("DELETE (" + listId.size() + ")");
-                        }
-                    }
-
-                    apparelModelT.setText("Edit Model");
-                    dataClicked = rowData;
-                    editFormMode = "update";
-                    alertPass.setVisible(true);
-                    insertBtn.setVisible(true);
-                    apparelModelT.setForeground(new java.awt.Color(0, 153, 0));
-                    apparelModelB.setBackground(new java.awt.Color(0, 153, 0));
-                    if(apparelModelP.isShowing()) {
-                        showEditModel(rowData);
-                        editBtn.setVisible(false);
-                    } else {
-                        editBtn.setVisible(true);
-                    }
+                public boolean isCellEditable(int row, int column) {
+                    return false;
                 }
             });
-        } catch(SQLException e) {
-            JOptionPane.showMessageDialog(null, e);
+
+            JScrollPane scrollPane = new JScrollPane(mTb);
+            tableBox.add(scrollPane);
+            contentPanel.add(tableBox);
+            mModel = (DefaultTableModel) mTb.getModel();
         }
-        JScrollPane scrollPane = new JScrollPane(tb);
-        tableBox.add(scrollPane);
-        contentPanel.add(tableBox);
+        
+        mWorker = new ModelWorker();
+        mWorker.execute();
     }
     
     /**
@@ -3900,6 +4024,7 @@ public class Dashboard extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JComboBox<String> kategoriField;
+    private javax.swing.JLabel loading;
     private javax.swing.JLabel logoutBtn;
     private javax.swing.JPanel mainPanel;
     private javax.swing.JLabel modelBtn;
