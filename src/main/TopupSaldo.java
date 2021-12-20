@@ -48,6 +48,18 @@ public class TopupSaldo extends javax.swing.JFrame {
     public void letTopup(String username) {
         this.setVisible(true);
         usernameLogin = username;
+        
+        try {
+            sql = "SELECT saldo FROM users WHERE username = ?";
+            ps = con.prepareStatement(sql);
+            ps.setString(1, username);
+            rs = ps.executeQuery();
+            while(rs.next()) {
+                yourSaldo.setText("Rp. " + currencyID(Integer.parseInt(rs.getString("saldo"))));
+            }
+        } catch(SQLException e) {
+            System.out.println(e);
+        }
     }
     
     public static String currencyID(int nominal) {

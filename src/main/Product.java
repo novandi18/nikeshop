@@ -16,6 +16,8 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.NumberFormat;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -500,12 +502,20 @@ public class Product extends javax.swing.JFrame {
         getDesc = desc.getText();
         
         try {
-            Order orderUI = new Order();
-            orderUI.setVisible(true);
-            orderUI.DetailOrder(getUsername, getId, getQuantity, getSize, getDesc, "product");
-        } catch (IOException ex) {
-//            Logger.getLogger(Product.class.getName()).log(Level.SEVERE, null, ex);
-        }
+            sql = "SELECT stock FROM products WHERE id_product = ?";
+            ps = con.prepareStatement(sql);
+            ps.setString(1, getId);
+            rs = ps.executeQuery();
+            while(rs.next()) {
+                if(Integer.parseInt(rs.getString("stock")) >= 1) {
+                    Order orderUI = new Order();
+                    orderUI.setVisible(true);
+                    orderUI.DetailOrder(getUsername, getId, getQuantity, getSize, getDesc, "product");
+                } else {
+                    JOptionPane.showMessageDialog(null, "Barang ini sudah habis terjual");
+                }
+            }
+        } catch (IOException | SQLException ex) {}
     }//GEN-LAST:event_buyBtnActionPerformed
 
     private void quantityStateChanged(javax.swing.event.ChangeEvent evt) {//GEN-FIRST:event_quantityStateChanged
@@ -516,7 +526,6 @@ public class Product extends javax.swing.JFrame {
     }//GEN-LAST:event_quantityStateChanged
 
     private void addToCartActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addToCartActionPerformed
-//        System.out.println(getId);
         try {
             sql = "INSERT INTO cart(username, id_product, quantity, size, price, description) VALUES(?, ?, ?, ?, ?, ?)";
             ps = con.prepareStatement(sql);
