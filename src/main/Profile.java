@@ -189,16 +189,7 @@ public class Profile extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
         jButton2 = new javax.swing.JButton();
-        jPanel2 = new javax.swing.JPanel();
-        jLabel5 = new javax.swing.JLabel();
-        jLabel9 = new javax.swing.JLabel();
-        jLabel10 = new javax.swing.JLabel();
-        jLabel11 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
-        currentPass = new javax.swing.JPasswordField();
-        newPass = new javax.swing.JPasswordField();
-        confirmPass = new javax.swing.JPasswordField();
-        jPanel3 = new javax.swing.JPanel();
+        leftPanel = new javax.swing.JPanel();
         jLabel3 = new javax.swing.JLabel();
         fullNameF = new javax.swing.JTextField();
         changeName = new javax.swing.JButton();
@@ -223,15 +214,26 @@ public class Profile extends javax.swing.JFrame {
         jScrollPane1 = new javax.swing.JScrollPane();
         alamatF = new javax.swing.JTextArea();
         jLabel12 = new javax.swing.JLabel();
-        changeAlamat1 = new javax.swing.JButton();
+        topupSaldo = new javax.swing.JButton();
         saldoF = new javax.swing.JTextField();
         noOvoF = new javax.swing.JTextField();
         jLabel13 = new javax.swing.JLabel();
         changeOvo = new javax.swing.JButton();
         saldoOvoF = new javax.swing.JTextField();
         deleteOvo = new javax.swing.JButton();
+        rightPanel = new javax.swing.JPanel();
+        jLabel5 = new javax.swing.JLabel();
+        jLabel9 = new javax.swing.JLabel();
+        jLabel10 = new javax.swing.JLabel();
+        jLabel11 = new javax.swing.JLabel();
+        jButton1 = new javax.swing.JButton();
+        currentPass = new javax.swing.JPasswordField();
+        newPass = new javax.swing.JPasswordField();
+        confirmPass = new javax.swing.JPasswordField();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setMinimumSize(new java.awt.Dimension(906, 685));
+        setPreferredSize(new java.awt.Dimension(906, 685));
 
         jPanel1.setBackground(new java.awt.Color(255, 255, 255));
         jPanel1.setForeground(new java.awt.Color(0, 0, 0));
@@ -248,9 +250,15 @@ public class Profile extends javax.swing.JFrame {
         jButton2.setBackground(new java.awt.Color(102, 102, 102));
         jButton2.setForeground(new java.awt.Color(255, 255, 255));
         jButton2.setText("Refresh");
+        jButton2.setBorder(null);
         jButton2.setContentAreaFilled(false);
         jButton2.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         jButton2.setOpaque(true);
+        jButton2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton2ActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout headerPanelLayout = new javax.swing.GroupLayout(headerPanel);
         headerPanel.setLayout(headerPanelLayout);
@@ -260,7 +268,7 @@ public class Profile extends javax.swing.JFrame {
                 .addGap(143, 143, 143)
                 .addComponent(jLabel1)
                 .addGap(150, 150, 150)
-                .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, 161, Short.MAX_VALUE)
+                .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, 156, Short.MAX_VALUE)
                 .addGap(184, 184, 184)
                 .addComponent(jButton2, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addGap(115, 115, 115))
@@ -280,96 +288,7 @@ public class Profile extends javax.swing.JFrame {
                 .addContainerGap(15, Short.MAX_VALUE))
         );
 
-        jPanel2.setBackground(new java.awt.Color(204, 204, 204));
-        jPanel2.setForeground(new java.awt.Color(0, 0, 0));
-
-        jLabel5.setFont(new java.awt.Font("Google Sans", 1, 18)); // NOI18N
-        jLabel5.setForeground(new java.awt.Color(0, 0, 0));
-        jLabel5.setText("Ganti Password");
-
-        jLabel9.setBackground(new java.awt.Color(51, 51, 51));
-        jLabel9.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
-        jLabel9.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel9.setText("Password Sekarang");
-
-        jLabel10.setBackground(new java.awt.Color(51, 51, 51));
-        jLabel10.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
-        jLabel10.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel10.setText("Password Baru");
-
-        jLabel11.setBackground(new java.awt.Color(51, 51, 51));
-        jLabel11.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
-        jLabel11.setForeground(new java.awt.Color(51, 51, 51));
-        jLabel11.setText("Konfirmasi Password Baru");
-
-        jButton1.setBackground(new java.awt.Color(0, 0, 0));
-        jButton1.setFont(new java.awt.Font("Google Sans", 0, 14)); // NOI18N
-        jButton1.setForeground(new java.awt.Color(255, 255, 255));
-        jButton1.setText("Submit");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
-
-        currentPass.setBackground(new java.awt.Color(204, 204, 204));
-        currentPass.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
-        currentPass.setForeground(new java.awt.Color(0, 0, 0));
-        currentPass.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
-
-        newPass.setBackground(new java.awt.Color(204, 204, 204));
-        newPass.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
-        newPass.setForeground(new java.awt.Color(0, 0, 0));
-        newPass.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
-
-        confirmPass.setBackground(new java.awt.Color(204, 204, 204));
-        confirmPass.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
-        confirmPass.setForeground(new java.awt.Color(0, 0, 0));
-        confirmPass.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
-
-        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
-        jPanel2.setLayout(jPanel2Layout);
-        jPanel2Layout.setHorizontalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGap(152, 152, 152)
-                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 123, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addContainerGap(20, Short.MAX_VALUE)
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(confirmPass, javax.swing.GroupLayout.PREFERRED_SIZE, 385, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(newPass, javax.swing.GroupLayout.PREFERRED_SIZE, 385, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel11)
-                    .addComponent(jLabel10)
-                    .addComponent(jLabel9)
-                    .addComponent(jLabel5)
-                    .addComponent(currentPass, javax.swing.GroupLayout.PREFERRED_SIZE, 385, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(24, 24, 24))
-        );
-        jPanel2Layout.setVerticalGroup(
-            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGap(45, 45, 45)
-                .addComponent(jLabel5)
-                .addGap(18, 18, 18)
-                .addComponent(jLabel9)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(currentPass, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jLabel10)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(newPass, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(12, 12, 12)
-                .addComponent(jLabel11)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(confirmPass, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(66, 66, 66)
-                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 37, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(242, Short.MAX_VALUE))
-        );
-
-        jPanel3.setBackground(new java.awt.Color(255, 255, 255));
+        leftPanel.setBackground(new java.awt.Color(255, 255, 255));
 
         jLabel3.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
         jLabel3.setForeground(new java.awt.Color(102, 102, 102));
@@ -394,26 +313,59 @@ public class Profile extends javax.swing.JFrame {
         changeName.setContentAreaFilled(false);
         changeName.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         changeName.setOpaque(true);
+        changeName.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                changeNameMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                changeNameMouseExited(evt);
+            }
+        });
         changeName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 changeNameActionPerformed(evt);
             }
         });
 
-        submitName.setBackground(new java.awt.Color(0, 0, 0));
+        submitName.setBackground(new java.awt.Color(0, 102, 153));
         submitName.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
         submitName.setForeground(new java.awt.Color(255, 255, 255));
         submitName.setText("Submit");
+        submitName.setBorder(null);
+        submitName.setBorderPainted(false);
+        submitName.setContentAreaFilled(false);
+        submitName.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        submitName.setOpaque(true);
+        submitName.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                submitNameMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                submitNameMouseExited(evt);
+            }
+        });
         submitName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 submitNameActionPerformed(evt);
             }
         });
 
-        cancelName.setBackground(new java.awt.Color(204, 0, 0));
+        cancelName.setBackground(new java.awt.Color(204, 204, 204));
         cancelName.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
-        cancelName.setForeground(new java.awt.Color(255, 255, 255));
+        cancelName.setForeground(new java.awt.Color(0, 0, 0));
         cancelName.setText("Cancel");
+        cancelName.setBorder(null);
+        cancelName.setContentAreaFilled(false);
+        cancelName.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        cancelName.setOpaque(true);
+        cancelName.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                cancelNameMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                cancelNameMouseExited(evt);
+            }
+        });
         cancelName.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelNameActionPerformed(evt);
@@ -442,6 +394,14 @@ public class Profile extends javax.swing.JFrame {
         changeEmail.setContentAreaFilled(false);
         changeEmail.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         changeEmail.setOpaque(true);
+        changeEmail.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                changeEmailMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                changeEmailMouseExited(evt);
+            }
+        });
         changeEmail.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 changeEmailActionPerformed(evt);
@@ -455,20 +415,44 @@ public class Profile extends javax.swing.JFrame {
         emailF.setText("Email");
         emailF.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
 
-        submitEmail.setBackground(new java.awt.Color(0, 0, 0));
+        submitEmail.setBackground(new java.awt.Color(0, 102, 153));
         submitEmail.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
         submitEmail.setForeground(new java.awt.Color(255, 255, 255));
         submitEmail.setText("Submit");
+        submitEmail.setBorder(null);
+        submitEmail.setContentAreaFilled(false);
+        submitEmail.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        submitEmail.setOpaque(true);
+        submitEmail.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                submitEmailMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                submitEmailMouseExited(evt);
+            }
+        });
         submitEmail.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 submitEmailActionPerformed(evt);
             }
         });
 
-        cancelEmail.setBackground(new java.awt.Color(204, 0, 0));
+        cancelEmail.setBackground(new java.awt.Color(204, 204, 204));
         cancelEmail.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
-        cancelEmail.setForeground(new java.awt.Color(255, 255, 255));
+        cancelEmail.setForeground(new java.awt.Color(0, 0, 0));
         cancelEmail.setText("Cancel");
+        cancelEmail.setBorder(null);
+        cancelEmail.setContentAreaFilled(false);
+        cancelEmail.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        cancelEmail.setOpaque(true);
+        cancelEmail.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                cancelEmailMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                cancelEmailMouseExited(evt);
+            }
+        });
         cancelEmail.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelEmailActionPerformed(evt);
@@ -486,6 +470,14 @@ public class Profile extends javax.swing.JFrame {
         changePN.setContentAreaFilled(false);
         changePN.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         changePN.setOpaque(true);
+        changePN.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                changePNMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                changePNMouseExited(evt);
+            }
+        });
         changePN.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 changePNActionPerformed(evt);
@@ -499,20 +491,44 @@ public class Profile extends javax.swing.JFrame {
         pnF.setText("Nomor Telepon");
         pnF.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
 
-        submitPN.setBackground(new java.awt.Color(0, 0, 0));
+        submitPN.setBackground(new java.awt.Color(0, 102, 153));
         submitPN.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
         submitPN.setForeground(new java.awt.Color(255, 255, 255));
         submitPN.setText("Submit");
+        submitPN.setBorder(null);
+        submitPN.setContentAreaFilled(false);
+        submitPN.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        submitPN.setOpaque(true);
+        submitPN.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                submitPNMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                submitPNMouseExited(evt);
+            }
+        });
         submitPN.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 submitPNActionPerformed(evt);
             }
         });
 
-        cancelPN.setBackground(new java.awt.Color(204, 0, 0));
+        cancelPN.setBackground(new java.awt.Color(204, 204, 204));
         cancelPN.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
-        cancelPN.setForeground(new java.awt.Color(255, 255, 255));
+        cancelPN.setForeground(new java.awt.Color(0, 0, 0));
         cancelPN.setText("Cancel");
+        cancelPN.setBorder(null);
+        cancelPN.setContentAreaFilled(false);
+        cancelPN.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        cancelPN.setOpaque(true);
+        cancelPN.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                cancelPNMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                cancelPNMouseExited(evt);
+            }
+        });
         cancelPN.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelPNActionPerformed(evt);
@@ -530,26 +546,58 @@ public class Profile extends javax.swing.JFrame {
         changeAlamat.setContentAreaFilled(false);
         changeAlamat.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         changeAlamat.setOpaque(true);
+        changeAlamat.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                changeAlamatMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                changeAlamatMouseExited(evt);
+            }
+        });
         changeAlamat.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 changeAlamatActionPerformed(evt);
             }
         });
 
-        submitAlamat.setBackground(new java.awt.Color(0, 0, 0));
+        submitAlamat.setBackground(new java.awt.Color(0, 102, 153));
         submitAlamat.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
         submitAlamat.setForeground(new java.awt.Color(255, 255, 255));
         submitAlamat.setText("Submit");
+        submitAlamat.setBorder(null);
+        submitAlamat.setContentAreaFilled(false);
+        submitAlamat.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        submitAlamat.setOpaque(true);
+        submitAlamat.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                submitAlamatMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                submitAlamatMouseExited(evt);
+            }
+        });
         submitAlamat.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 submitAlamatActionPerformed(evt);
             }
         });
 
-        cancelAlamat.setBackground(new java.awt.Color(204, 0, 0));
+        cancelAlamat.setBackground(new java.awt.Color(204, 204, 204));
         cancelAlamat.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
-        cancelAlamat.setForeground(new java.awt.Color(255, 255, 255));
+        cancelAlamat.setForeground(new java.awt.Color(0, 0, 0));
         cancelAlamat.setText("Cancel");
+        cancelAlamat.setBorder(null);
+        cancelAlamat.setContentAreaFilled(false);
+        cancelAlamat.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        cancelAlamat.setOpaque(true);
+        cancelAlamat.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                cancelAlamatMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                cancelAlamatMouseExited(evt);
+            }
+        });
         cancelAlamat.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 cancelAlamatActionPerformed(evt);
@@ -569,16 +617,24 @@ public class Profile extends javax.swing.JFrame {
         jLabel12.setForeground(new java.awt.Color(102, 102, 102));
         jLabel12.setText("Saldoku");
 
-        changeAlamat1.setBackground(new java.awt.Color(0, 204, 51));
-        changeAlamat1.setForeground(new java.awt.Color(255, 255, 255));
-        changeAlamat1.setText("Isi Ulang");
-        changeAlamat1.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 204, 51), 2));
-        changeAlamat1.setContentAreaFilled(false);
-        changeAlamat1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
-        changeAlamat1.setOpaque(true);
-        changeAlamat1.addActionListener(new java.awt.event.ActionListener() {
+        topupSaldo.setBackground(new java.awt.Color(0, 204, 51));
+        topupSaldo.setForeground(new java.awt.Color(255, 255, 255));
+        topupSaldo.setText("Isi Ulang");
+        topupSaldo.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 204, 51), 2));
+        topupSaldo.setContentAreaFilled(false);
+        topupSaldo.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        topupSaldo.setOpaque(true);
+        topupSaldo.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                topupSaldoMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                topupSaldoMouseExited(evt);
+            }
+        });
+        topupSaldo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                changeAlamat1ActionPerformed(evt);
+                topupSaldoActionPerformed(evt);
             }
         });
 
@@ -609,6 +665,14 @@ public class Profile extends javax.swing.JFrame {
         changeOvo.setContentAreaFilled(false);
         changeOvo.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         changeOvo.setOpaque(true);
+        changeOvo.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                changeOvoMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                changeOvoMouseExited(evt);
+            }
+        });
         changeOvo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 changeOvoActionPerformed(evt);
@@ -623,145 +687,162 @@ public class Profile extends javax.swing.JFrame {
         saldoOvoF.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
         saldoOvoF.setFocusable(false);
 
-        deleteOvo.setBackground(new java.awt.Color(204, 0, 0));
+        deleteOvo.setBackground(new java.awt.Color(255, 51, 51));
         deleteOvo.setForeground(new java.awt.Color(255, 255, 255));
         deleteOvo.setText("Putuskan");
-        deleteOvo.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(204, 0, 0), 2));
+        deleteOvo.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 51, 51), 2));
         deleteOvo.setContentAreaFilled(false);
         deleteOvo.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         deleteOvo.setOpaque(true);
+        deleteOvo.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseEntered(java.awt.event.MouseEvent evt) {
+                deleteOvoMouseEntered(evt);
+            }
+            public void mouseExited(java.awt.event.MouseEvent evt) {
+                deleteOvoMouseExited(evt);
+            }
+        });
         deleteOvo.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 deleteOvoActionPerformed(evt);
             }
         });
 
-        javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
-        jPanel3.setLayout(jPanel3Layout);
-        jPanel3Layout.setHorizontalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
+        javax.swing.GroupLayout leftPanelLayout = new javax.swing.GroupLayout(leftPanel);
+        leftPanel.setLayout(leftPanelLayout);
+        leftPanelLayout.setHorizontalGroup(
+            leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(leftPanelLayout.createSequentialGroup()
                 .addGap(23, 23, 23)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                            .addGroup(jPanel3Layout.createSequentialGroup()
+                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(leftPanelLayout.createSequentialGroup()
+                        .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addComponent(saldoOvoF, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, leftPanelLayout.createSequentialGroup()
                                 .addComponent(jLabel12)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(changeAlamat1))
-                            .addGroup(jPanel3Layout.createSequentialGroup()
+                                .addComponent(topupSaldo, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, leftPanelLayout.createSequentialGroup()
                                 .addComponent(jLabel13)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(changeOvo)
+                                .addComponent(changeOvo, javax.swing.GroupLayout.PREFERRED_SIZE, 62, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(deleteOvo, javax.swing.GroupLayout.PREFERRED_SIZE, 64, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(saldoF)
-                            .addComponent(noOvoF, javax.swing.GroupLayout.DEFAULT_SIZE, 431, Short.MAX_VALUE)
-                            .addComponent(saldoOvoF))
+                                .addComponent(deleteOvo, javax.swing.GroupLayout.PREFERRED_SIZE, 71, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(saldoF, javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(noOvoF, javax.swing.GroupLayout.Alignment.LEADING))
+                        .addGap(174, 174, 174))
+                    .addGroup(leftPanelLayout.createSequentialGroup()
+                        .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(leftPanelLayout.createSequentialGroup()
+                                .addComponent(jLabel3)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(changeName, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(leftPanelLayout.createSequentialGroup()
+                                .addComponent(jLabel8)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(changeAlamat, javax.swing.GroupLayout.PREFERRED_SIZE, 60, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addGroup(leftPanelLayout.createSequentialGroup()
+                                .addComponent(jLabel7)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(changePN, javax.swing.GroupLayout.PREFERRED_SIZE, 59, javax.swing.GroupLayout.PREFERRED_SIZE)))
                         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(jPanel3Layout.createSequentialGroup()
-                        .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
-                                .addComponent(fullNameF)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(submitName)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cancelName))
-                            .addGroup(jPanel3Layout.createSequentialGroup()
-                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 314, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 8, Short.MAX_VALUE)
-                                .addComponent(submitAlamat)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(cancelAlamat))
-                            .addGroup(jPanel3Layout.createSequentialGroup()
-                                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                    .addGroup(jPanel3Layout.createSequentialGroup()
-                                        .addComponent(jLabel8)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, leftPanelLayout.createSequentialGroup()
+                        .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(leftPanelLayout.createSequentialGroup()
+                                .addComponent(usernameF)
+                                .addGap(26, 26, 26))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, leftPanelLayout.createSequentialGroup()
+                                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(jScrollPane1, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 318, Short.MAX_VALUE)
+                                    .addComponent(pnF))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
+                            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, leftPanelLayout.createSequentialGroup()
+                                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addComponent(fullNameF, javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(emailF))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED))
+                            .addGroup(leftPanelLayout.createSequentialGroup()
+                                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addGroup(leftPanelLayout.createSequentialGroup()
+                                        .addComponent(jLabel6)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(changeAlamat))
-                                    .addGroup(jPanel3Layout.createSequentialGroup()
-                                        .addComponent(jLabel7)
+                                        .addComponent(changeEmail, javax.swing.GroupLayout.PREFERRED_SIZE, 57, javax.swing.GroupLayout.PREFERRED_SIZE))
+                                    .addComponent(jLabel4))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
+                        .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(leftPanelLayout.createSequentialGroup()
+                                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                    .addGroup(leftPanelLayout.createSequentialGroup()
+                                        .addComponent(submitAlamat, javax.swing.GroupLayout.DEFAULT_SIZE, 60, Short.MAX_VALUE)
                                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                        .addComponent(changePN))
-                                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                                        .addGroup(jPanel3Layout.createSequentialGroup()
-                                            .addComponent(pnF)
-                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                            .addComponent(submitPN)
-                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                            .addComponent(cancelPN))
-                                        .addComponent(jLabel4, javax.swing.GroupLayout.Alignment.LEADING)
-                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel3Layout.createSequentialGroup()
-                                            .addComponent(jLabel3)
-                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                            .addComponent(changeName))
-                                        .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel3Layout.createSequentialGroup()
-                                            .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                                                .addGroup(jPanel3Layout.createSequentialGroup()
-                                                    .addComponent(jLabel6)
-                                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                                    .addComponent(changeEmail))
-                                                .addComponent(emailF, javax.swing.GroupLayout.PREFERRED_SIZE, 314, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                            .addComponent(submitEmail)
-                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                            .addComponent(cancelEmail))
-                                        .addComponent(usernameF, javax.swing.GroupLayout.Alignment.LEADING)))
-                                .addGap(0, 0, Short.MAX_VALUE)))
-                        .addGap(13, 13, 13))))
+                                        .addComponent(cancelAlamat, javax.swing.GroupLayout.DEFAULT_SIZE, 61, Short.MAX_VALUE))
+                                    .addGroup(leftPanelLayout.createSequentialGroup()
+                                        .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                                            .addComponent(submitEmail, javax.swing.GroupLayout.DEFAULT_SIZE, 60, Short.MAX_VALUE)
+                                            .addComponent(submitPN, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                        .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                            .addComponent(cancelPN, javax.swing.GroupLayout.DEFAULT_SIZE, 61, Short.MAX_VALUE)
+                                            .addComponent(cancelEmail, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                                .addGap(1, 1, 1))
+                            .addGroup(leftPanelLayout.createSequentialGroup()
+                                .addComponent(submitName, javax.swing.GroupLayout.DEFAULT_SIZE, 63, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(cancelName, javax.swing.GroupLayout.DEFAULT_SIZE, 59, Short.MAX_VALUE)))
+                        .addGap(70, 70, 70))))
         );
-        jPanel3Layout.setVerticalGroup(
-            jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(jPanel3Layout.createSequentialGroup()
+        leftPanelLayout.setVerticalGroup(
+            leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(leftPanelLayout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(changeName))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(fullNameF, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(submitName, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(cancelName, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(fullNameF, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(submitName, javax.swing.GroupLayout.PREFERRED_SIZE, 35, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(cancelName, javax.swing.GroupLayout.PREFERRED_SIZE, 34, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel4)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(usernameF, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGap(15, 15, 15)
+                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel6)
                     .addComponent(changeEmail))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(emailF, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(submitEmail, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(cancelEmail, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGap(5, 5, 5)
+                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel7)
                     .addComponent(changePN))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(pnF, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(submitPN, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(cancelPN, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel8)
                     .addComponent(changeAlamat))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                         .addComponent(submitAlamat, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addComponent(cancelAlamat, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 103, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addComponent(cancelAlamat, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel12)
-                    .addComponent(changeAlamat1))
+                    .addComponent(topupSaldo))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(saldoF, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                .addGroup(leftPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel13)
                     .addComponent(changeOvo)
                     .addComponent(deleteOvo))
@@ -769,7 +850,98 @@ public class Profile extends javax.swing.JFrame {
                 .addComponent(noOvoF, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(saldoOvoF, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(22, Short.MAX_VALUE))
+                .addContainerGap(19, Short.MAX_VALUE))
+        );
+
+        rightPanel.setBackground(new java.awt.Color(204, 204, 204));
+        rightPanel.setForeground(new java.awt.Color(0, 0, 0));
+
+        jLabel5.setFont(new java.awt.Font("Google Sans", 1, 18)); // NOI18N
+        jLabel5.setForeground(new java.awt.Color(0, 0, 0));
+        jLabel5.setText("Ganti Password");
+
+        jLabel9.setBackground(new java.awt.Color(51, 51, 51));
+        jLabel9.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
+        jLabel9.setForeground(new java.awt.Color(51, 51, 51));
+        jLabel9.setText("Password Sekarang");
+
+        jLabel10.setBackground(new java.awt.Color(51, 51, 51));
+        jLabel10.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
+        jLabel10.setForeground(new java.awt.Color(51, 51, 51));
+        jLabel10.setText("Password Baru");
+
+        jLabel11.setBackground(new java.awt.Color(51, 51, 51));
+        jLabel11.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
+        jLabel11.setForeground(new java.awt.Color(51, 51, 51));
+        jLabel11.setText("Konfirmasi Password Baru");
+
+        jButton1.setBackground(new java.awt.Color(0, 102, 153));
+        jButton1.setFont(new java.awt.Font("Google Sans", 0, 14)); // NOI18N
+        jButton1.setForeground(new java.awt.Color(255, 255, 255));
+        jButton1.setText("Submit");
+        jButton1.setBorder(null);
+        jButton1.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
+        currentPass.setBackground(new java.awt.Color(204, 204, 204));
+        currentPass.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
+        currentPass.setForeground(new java.awt.Color(0, 0, 0));
+        currentPass.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+
+        newPass.setBackground(new java.awt.Color(204, 204, 204));
+        newPass.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
+        newPass.setForeground(new java.awt.Color(0, 0, 0));
+        newPass.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+
+        confirmPass.setBackground(new java.awt.Color(204, 204, 204));
+        confirmPass.setFont(new java.awt.Font("Google Sans", 0, 12)); // NOI18N
+        confirmPass.setForeground(new java.awt.Color(0, 0, 0));
+        confirmPass.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 0, 0)));
+
+        javax.swing.GroupLayout rightPanelLayout = new javax.swing.GroupLayout(rightPanel);
+        rightPanel.setLayout(rightPanelLayout);
+        rightPanelLayout.setHorizontalGroup(
+            rightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(rightPanelLayout.createSequentialGroup()
+                .addGap(24, 24, 24)
+                .addGroup(rightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(confirmPass)
+                    .addComponent(newPass)
+                    .addComponent(jLabel11)
+                    .addComponent(jLabel10)
+                    .addComponent(jLabel9)
+                    .addComponent(jLabel5)
+                    .addComponent(currentPass))
+                .addGap(28, 28, 28))
+            .addGroup(rightPanelLayout.createSequentialGroup()
+                .addGap(112, 112, 112)
+                .addComponent(jButton1, javax.swing.GroupLayout.DEFAULT_SIZE, 129, Short.MAX_VALUE)
+                .addGap(114, 114, 114))
+        );
+        rightPanelLayout.setVerticalGroup(
+            rightPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(rightPanelLayout.createSequentialGroup()
+                .addGap(48, 48, 48)
+                .addComponent(jLabel5)
+                .addGap(18, 18, 18)
+                .addComponent(jLabel9)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(currentPass, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(jLabel10)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(newPass, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(12, 12, 12)
+                .addComponent(jLabel11)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(confirmPass, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(59, 59, 59)
+                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(217, Short.MAX_VALUE))
         );
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -777,22 +949,23 @@ public class Profile extends javax.swing.JFrame {
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addComponent(headerPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addGap(16, 16, 16)
-                .addComponent(jPanel2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel1Layout.createSequentialGroup()
+                    .addComponent(leftPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                    .addComponent(rightPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addComponent(headerPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(6, 6, 6)
-                        .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jPanel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                .addContainerGap(614, Short.MAX_VALUE))
+            .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(jPanel1Layout.createSequentialGroup()
+                    .addGap(81, 81, 81)
+                    .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                        .addComponent(leftPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(rightPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
         );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
@@ -824,6 +997,7 @@ public class Profile extends javax.swing.JFrame {
         submitName.setVisible(false);
         cancelName.setVisible(false);
         changeName.setVisible(true);
+        fullNameF.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
     }//GEN-LAST:event_cancelNameActionPerformed
 
     private void changeEmailActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_changeEmailActionPerformed
@@ -841,6 +1015,7 @@ public class Profile extends javax.swing.JFrame {
         submitEmail.setVisible(false);
         cancelEmail.setVisible(false);
         changeEmail.setVisible(true);
+        emailF.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
     }//GEN-LAST:event_cancelEmailActionPerformed
 
     private void cancelPNActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelPNActionPerformed
@@ -849,6 +1024,7 @@ public class Profile extends javax.swing.JFrame {
         submitPN.setVisible(false);
         cancelPN.setVisible(false);
         changePN.setVisible(true);
+        pnF.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 255, 255)));
     }//GEN-LAST:event_cancelPNActionPerformed
 
     private void changePNActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_changePNActionPerformed
@@ -1002,10 +1178,10 @@ public class Profile extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_submitAlamatActionPerformed
 
-    private void changeAlamat1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_changeAlamat1ActionPerformed
+    private void topupSaldoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_topupSaldoActionPerformed
        TopupSaldo ts = new TopupSaldo();
        ts.letTopup(usernameSession);
-    }//GEN-LAST:event_changeAlamat1ActionPerformed
+    }//GEN-LAST:event_topupSaldoActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
         if(String.valueOf(currentPass.getPassword()).equals("") && (String.valueOf(newPass.getPassword()).equals("") && String.valueOf(confirmPass.getPassword()).equals(""))) {
@@ -1090,6 +1266,145 @@ public class Profile extends javax.swing.JFrame {
         pino.checkPin(usernameSession, "delete");
     }//GEN-LAST:event_deleteOvoActionPerformed
 
+    private void changeNameMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_changeNameMouseEntered
+        changeName.setBackground(new java.awt.Color(0, 161, 40));
+        changeName.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 161, 40), 2));
+    }//GEN-LAST:event_changeNameMouseEntered
+
+    private void changeNameMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_changeNameMouseExited
+        changeName.setBackground(new java.awt.Color(0,204,51));
+        changeName.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0,204,51), 2));
+    }//GEN-LAST:event_changeNameMouseExited
+
+    private void changeEmailMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_changeEmailMouseEntered
+        changeEmail.setBackground(new java.awt.Color(0, 161, 40));
+        changeEmail.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 161, 40), 2));
+    }//GEN-LAST:event_changeEmailMouseEntered
+
+    private void changeEmailMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_changeEmailMouseExited
+        changeEmail.setBackground(new java.awt.Color(0,204,51));
+        changeEmail.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0,204,51), 2));
+    }//GEN-LAST:event_changeEmailMouseExited
+
+    private void changePNMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_changePNMouseEntered
+        changePN.setBackground(new java.awt.Color(0, 161, 40));
+        changePN.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 161, 40), 2));
+    }//GEN-LAST:event_changePNMouseEntered
+
+    private void changePNMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_changePNMouseExited
+        changePN.setBackground(new java.awt.Color(0,204,51));
+        changePN.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0,204,51), 2));
+    }//GEN-LAST:event_changePNMouseExited
+
+    private void changeAlamatMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_changeAlamatMouseEntered
+        changeAlamat.setBackground(new java.awt.Color(0, 161, 40));
+        changeAlamat.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 161, 40), 2));
+    }//GEN-LAST:event_changeAlamatMouseEntered
+
+    private void changeAlamatMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_changeAlamatMouseExited
+        changeAlamat.setBackground(new java.awt.Color(0,204,51));
+        changeAlamat.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0,204,51), 2));
+    }//GEN-LAST:event_changeAlamatMouseExited
+
+    private void topupSaldoMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_topupSaldoMouseEntered
+        topupSaldo.setBackground(new java.awt.Color(0, 161, 40));
+        topupSaldo.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 161, 40), 2));
+    }//GEN-LAST:event_topupSaldoMouseEntered
+
+    private void topupSaldoMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_topupSaldoMouseExited
+        topupSaldo.setBackground(new java.awt.Color(0,204,51));
+        topupSaldo.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0,204,51), 2));
+    }//GEN-LAST:event_topupSaldoMouseExited
+
+    private void changeOvoMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_changeOvoMouseEntered
+        changeOvo.setBackground(new java.awt.Color(0, 161, 40));
+        changeOvo.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0, 161, 40), 2));
+    }//GEN-LAST:event_changeOvoMouseEntered
+
+    private void changeOvoMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_changeOvoMouseExited
+        changeOvo.setBackground(new java.awt.Color(0,204,51));
+        changeOvo.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(0,204,51), 2));
+    }//GEN-LAST:event_changeOvoMouseExited
+
+    private void submitNameMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_submitNameMouseEntered
+        submitName.setBackground(new java.awt.Color(0, 80, 120));
+    }//GEN-LAST:event_submitNameMouseEntered
+
+    private void submitNameMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_submitNameMouseExited
+        submitName.setBackground(new java.awt.Color(0, 102, 153));
+    }//GEN-LAST:event_submitNameMouseExited
+
+    private void submitEmailMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_submitEmailMouseEntered
+        submitEmail.setBackground(new java.awt.Color(0, 80, 120));
+    }//GEN-LAST:event_submitEmailMouseEntered
+
+    private void submitEmailMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_submitEmailMouseExited
+        submitEmail.setBackground(new java.awt.Color(0, 102, 153));
+    }//GEN-LAST:event_submitEmailMouseExited
+
+    private void submitPNMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_submitPNMouseEntered
+        submitPN.setBackground(new java.awt.Color(0, 80, 120));
+    }//GEN-LAST:event_submitPNMouseEntered
+
+    private void submitPNMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_submitPNMouseExited
+        submitPN.setBackground(new java.awt.Color(0, 102, 153));
+    }//GEN-LAST:event_submitPNMouseExited
+
+    private void submitAlamatMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_submitAlamatMouseEntered
+        submitAlamat.setBackground(new java.awt.Color(0, 80, 120));
+    }//GEN-LAST:event_submitAlamatMouseEntered
+
+    private void submitAlamatMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_submitAlamatMouseExited
+        submitAlamat.setBackground(new java.awt.Color(0, 102, 153));
+    }//GEN-LAST:event_submitAlamatMouseExited
+
+    private void cancelNameMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cancelNameMouseEntered
+        cancelName.setBackground(new java.awt.Color(171, 171, 171));
+    }//GEN-LAST:event_cancelNameMouseEntered
+
+    private void cancelNameMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cancelNameMouseExited
+        cancelName.setBackground(new java.awt.Color(204, 204, 204));
+    }//GEN-LAST:event_cancelNameMouseExited
+
+    private void cancelEmailMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cancelEmailMouseEntered
+        cancelEmail.setBackground(new java.awt.Color(171, 171, 171));
+    }//GEN-LAST:event_cancelEmailMouseEntered
+
+    private void cancelEmailMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cancelEmailMouseExited
+        cancelEmail.setBackground(new java.awt.Color(204, 204, 204));
+    }//GEN-LAST:event_cancelEmailMouseExited
+
+    private void cancelPNMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cancelPNMouseEntered
+        cancelPN.setBackground(new java.awt.Color(171, 171, 171));
+    }//GEN-LAST:event_cancelPNMouseEntered
+
+    private void cancelPNMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cancelPNMouseExited
+        cancelPN.setBackground(new java.awt.Color(204, 204, 204));
+    }//GEN-LAST:event_cancelPNMouseExited
+
+    private void cancelAlamatMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cancelAlamatMouseEntered
+        cancelAlamat.setBackground(new java.awt.Color(171, 171, 171));
+    }//GEN-LAST:event_cancelAlamatMouseEntered
+
+    private void cancelAlamatMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_cancelAlamatMouseExited
+        cancelAlamat.setBackground(new java.awt.Color(204, 204, 204));
+    }//GEN-LAST:event_cancelAlamatMouseExited
+
+    private void deleteOvoMouseEntered(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_deleteOvoMouseEntered
+        deleteOvo.setBackground(new java.awt.Color(214, 32, 32));
+        deleteOvo.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(214, 32, 32), 2));
+    }//GEN-LAST:event_deleteOvoMouseEntered
+
+    private void deleteOvoMouseExited(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_deleteOvoMouseExited
+        deleteOvo.setBackground(new java.awt.Color(255, 51, 51));
+        deleteOvo.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(255, 51, 51), 2));
+
+    }//GEN-LAST:event_deleteOvoMouseExited
+
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
+        getUsers(usernameSession);
+    }//GEN-LAST:event_jButton2ActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -1106,15 +1421,11 @@ public class Profile extends javax.swing.JFrame {
                     break;
                 }
             }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(Profile.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(Profile.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(Profile.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | javax.swing.UnsupportedLookAndFeelException ex) {
             java.util.logging.Logger.getLogger(Profile.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
+        //</editor-fold>
+        
         //</editor-fold>
 
         /* Create and display the form */
@@ -1130,7 +1441,6 @@ public class Profile extends javax.swing.JFrame {
     private javax.swing.JButton cancelName;
     private javax.swing.JButton cancelPN;
     private javax.swing.JButton changeAlamat;
-    private javax.swing.JButton changeAlamat1;
     private javax.swing.JButton changeEmail;
     private javax.swing.JButton changeName;
     private javax.swing.JButton changeOvo;
@@ -1157,18 +1467,19 @@ public class Profile extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel8;
     private javax.swing.JLabel jLabel9;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JPanel jPanel2;
-    private javax.swing.JPanel jPanel3;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JPanel leftPanel;
     private javax.swing.JPasswordField newPass;
     private javax.swing.JTextField noOvoF;
     private javax.swing.JTextField pnF;
+    private javax.swing.JPanel rightPanel;
     private javax.swing.JTextField saldoF;
     private javax.swing.JTextField saldoOvoF;
     private javax.swing.JButton submitAlamat;
     private javax.swing.JButton submitEmail;
     private javax.swing.JButton submitName;
     private javax.swing.JButton submitPN;
+    private javax.swing.JButton topupSaldo;
     private javax.swing.JTextField usernameF;
     // End of variables declaration//GEN-END:variables
 }

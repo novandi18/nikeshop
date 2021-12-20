@@ -4,12 +4,10 @@
  */
 package main;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Image;
 import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -19,12 +17,9 @@ import java.sql.SQLException;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
-import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JToggleButton;
 
@@ -37,9 +32,10 @@ public class Cart extends javax.swing.JFrame {
     Statement stat;
     PreparedStatement ps;
     ResultSet rs;
-    String sql, usernameSession, cP, d;
+    String sql, usernameSession, cP, d, st, gSt;
     int q, s, p;
     ArrayList<String> cartSelected = new ArrayList<>();
+    ArrayList<Integer> stockProduct = new ArrayList<>();
     
     /**
      * Creates new form Cart
@@ -83,22 +79,34 @@ public class Cart extends javax.swing.JFrame {
                     + "c.quantity AS Quantity, "
                     + "c.size AS Size, "
                     + "c.price AS Price, "
+                    + "p.stock AS Stock, "
                     + "c.description AS Description "
                     + "FROM cart c JOIN products p ON c.username = ? AND c.id_product = p.id_product";
             ps = con.prepareStatement(sql);
             ps.setString(1, username);
             rs = ps.executeQuery();
+            int idx = 0;
             while(rs.next()) {
+                if(idx > 4) {
+                    contentPanel.setLayout(new java.awt.GridLayout(0, 1));
+                } else {
+                    contentPanel.setLayout(new java.awt.GridLayout(5, 1));
+                }
+                
                 q = Integer.parseInt(rs.getString("Quantity"));
                 s = Integer.parseInt(rs.getString("Size"));
                 p = Integer.parseInt(rs.getString("Price"));
                 d = rs.getString("Description");
+                st = rs.getString("Stock");
+                stockProduct.add(Integer.parseInt(rs.getString("Stock")));
+                int gIdx = stockProduct.get(idx);
+                idx++;
                 
                 URL url = new URL("http://localhost/nikeshop/src/assets/img/" + rs.getString("ProductImage"));
                 Image image = ImageIO.read(url);
                 
                 JToggleButton tb = new JToggleButton(new ImageIcon(new ImageIcon(image).getImage().getScaledInstance(100, 100, Image.SCALE_DEFAULT)));
-                tb.setText("<html>" + rs.getString("ProductName") + "<br>" + rs.getString("Quantity") + " Pasang" + "<br>" + "Ukuran " + rs.getString("Size") + "</html>");
+                tb.setText("<html>" + rs.getString("ProductName") + "<br>" + rs.getString("Quantity") + " Pasang" + "<br>" + "Ukuran " + rs.getString("Size") + "<br>" + "Stok : " + rs.getString("Stock") + "</html>");
                 tb.setHorizontalAlignment(JToggleButton.LEFT);
                 tb.setCursor(new Cursor(Cursor.HAND_CURSOR));
                 tb.setPreferredSize(new Dimension(962, 120));
@@ -106,9 +114,15 @@ public class Cart extends javax.swing.JFrame {
                 String idPC = rs.getString("IdProductC");
                 
                 tb.addItemListener((ItemEvent ev) -> {
-                    if(ev.getStateChange() == ItemEvent.SELECTED){
-                        cartSelected.add(idPC);
-                        txtSelected.setText("Terpilih (" + cartSelected.size() + ")");
+                    if(ev.getStateChange() == ItemEvent.SELECTED) {
+                        if(gIdx >= 1) {
+                            cartSelected.add(idPC);
+                            txtSelected.setText("Terpilih (" + cartSelected.size() + ")");
+                        } else {
+                            JOptionPane.showMessageDialog(null, "Stok barang ini sudah habis");
+                            tb.setSelected(false);
+                        }
+                        
                         if(cartSelected.size() > 0) {
                             deleteFromCart.setVisible(true);
                         } else {
@@ -124,7 +138,6 @@ public class Cart extends javax.swing.JFrame {
                         }
                     }
                 });
-                
                 
                 contentPanel.add(tb);
             }
@@ -225,7 +238,7 @@ public class Cart extends javax.swing.JFrame {
         mainPanel.setHorizontalScrollBarPolicy(javax.swing.ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         contentPanel.setBackground(new java.awt.Color(255, 255, 255));
-        contentPanel.setLayout(new java.awt.GridLayout(0, 1));
+        contentPanel.setLayout(new java.awt.GridLayout(5, 1));
         mainPanel.setViewportView(contentPanel);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
