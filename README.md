@@ -10,7 +10,7 @@ Aplikasi jual beli sepatu Nike serta pengelolaan Admin. Aplikasi ini juga bertuj
 3. [MYSQL JDBC](https://dev.mysql.com/downloads/connector/j/)
 
 ## Admin
-- Username  : admingateng
+- Username  : adminganteng
 - Password  : admin123
 
 ## Configuration
